@@ -298,10 +298,20 @@ pub fn to_jdn(cal: Calendar, year: i32, month: u8, day: u8) -> i64 {
 
 impl Part {
     pub fn ymd(year: i32, month: u8, day: u8) -> Part {
-        Part { year, month: Some(month), day: Some(day), dual_year: None }
+        Part {
+            year,
+            month: Some(month),
+            day: Some(day),
+            dual_year: None,
+        }
     }
     pub fn year_only(year: i32) -> Part {
-        Part { year, month: None, day: None, dual_year: None }
+        Part {
+            year,
+            month: None,
+            day: None,
+            dual_year: None,
+        }
     }
     /// Earliest and latest JDN covered by this (possibly partial) point.
     pub fn span(&self, cal: Calendar) -> (i64, i64) {
@@ -324,11 +334,19 @@ impl Part {
                 match cal {
                     Calendar::Hebrew => {
                         // Hebrew civil year runs Tishri(7) .. Elul(6)
-                        (hebrew_new_year(self.year), hebrew_new_year(self.year + 1) - 1)
+                        (
+                            hebrew_new_year(self.year),
+                            hebrew_new_year(self.year + 1) - 1,
+                        )
                     }
                     _ => (
                         to_jdn(cal, self.year, first, 1),
-                        to_jdn(cal, self.year, last_m, days_in_month(cal, self.year, last_m)),
+                        to_jdn(
+                            cal,
+                            self.year,
+                            last_m,
+                            days_in_month(cal, self.year, last_m),
+                        ),
                     ),
                 }
             }
@@ -342,8 +360,18 @@ const GREG_EN: [&str; 12] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 const GREG_EN_LONG: [&str; 12] = [
-    "January", "February", "March", "April", "May", "June", "July", "August", "September",
-    "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 ];
 const GREG_TR_LONG: [&str; 12] = [
     "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim",
@@ -353,8 +381,8 @@ const HEBREW_G: [&str; 13] = [
     "NSN", "IYR", "SVN", "TMZ", "AAV", "ELL", "TSH", "CSH", "KSL", "TVT", "SHV", "ADR", "ADS",
 ];
 const FRENCH_G: [&str; 13] = [
-    "VEND", "BRUM", "FRIM", "NIVO", "PLUV", "VENT", "GERM", "FLOR", "PRAI", "MESS", "THER",
-    "FRUC", "COMP",
+    "VEND", "BRUM", "FRIM", "NIVO", "PLUV", "VENT", "GERM", "FLOR", "PRAI", "MESS", "THER", "FRUC",
+    "COMP",
 ];
 const HIJRI_G: [&str; 12] = [
     "MUHAR", "SAFAR", "RABIA", "RABIT", "JUMAA", "JUMAT", "RAJAB", "SHAAB", "RAMAD", "SHAWW",
@@ -393,7 +421,8 @@ fn parse_month(cal: Calendar, tok: &str) -> Option<u8> {
         for i in 0..12 {
             let en = GREG_EN_LONG[i].to_ascii_lowercase();
             let tr = normalize_alpha(GREG_TR_LONG[i]);
-            if t == en || t == tr || (t.len() == 3 && en.starts_with(&t)) || (t == "sept" && i == 8) {
+            if t == en || t == tr || (t.len() == 3 && en.starts_with(&t)) || (t == "sept" && i == 8)
+            {
                 return Some(i as u8 + 1);
             }
         }
@@ -421,7 +450,11 @@ fn parse_year_token(tok: &str) -> Option<(i32, Option<i32>)> {
     if let Some((y, alt)) = tok.split_once('/') {
         let y: i32 = y.parse().ok()?;
         let a: i32 = alt.parse().ok()?;
-        let alt_full = if alt.len() <= 2 { (y / 100) * 100 + a + if a < y % 100 { 100 } else { 0 } } else { a };
+        let alt_full = if alt.len() <= 2 {
+            (y / 100) * 100 + a + if a < y % 100 { 100 } else { 0 }
+        } else {
+            a
+        };
         return Some((y, Some(alt_full)));
     }
     if tok.is_empty() || tok.len() > 5 || !tok.chars().all(|c| c.is_ascii_digit()) {
@@ -454,18 +487,30 @@ fn parse_part(cal: Calendar, toks: &[String]) -> Result<Part, DateError> {
             // year, or ISO yyyy-mm-dd, or d.m.yyyy / d/m/yyyy
             let t = &toks[0];
             if let Some((y, alt)) = parse_year_token(t) {
-                return fin(Part { year: y, month: None, day: None, dual_year: alt });
+                return fin(Part {
+                    year: y,
+                    month: None,
+                    day: None,
+                    dual_year: alt,
+                });
             }
             for sep in ['-', '.', '/'] {
                 let parts: Vec<&str> = t.split(sep).collect();
-                if parts.len() == 3 && parts.iter().all(|p| p.chars().all(|c| c.is_ascii_digit()) && !p.is_empty()) {
+                if parts.len() == 3
+                    && parts
+                        .iter()
+                        .all(|p| p.chars().all(|c| c.is_ascii_digit()) && !p.is_empty())
+                {
                     let (y, m, d) = if parts[0].len() == 4 {
                         (parts[0], parts[1], parts[2])
                     } else {
                         (parts[2], parts[1], parts[0])
                     };
-                    let (y, m, d): (i32, u8, u8) =
-                        (y.parse().map_err(|_| err())?, m.parse().map_err(|_| err())?, d.parse().map_err(|_| err())?);
+                    let (y, m, d): (i32, u8, u8) = (
+                        y.parse().map_err(|_| err())?,
+                        m.parse().map_err(|_| err())?,
+                        d.parse().map_err(|_| err())?,
+                    );
                     validate(cal, y, Some(m), Some(d)).ok_or_else(err)?;
                     return fin(Part::ymd(y, m, d));
                 }
@@ -473,7 +518,12 @@ fn parse_part(cal: Calendar, toks: &[String]) -> Result<Part, DateError> {
                     let y: i32 = parts[0].parse().map_err(|_| err())?;
                     let m: u8 = parts[1].parse().map_err(|_| err())?;
                     validate(cal, y, Some(m), None).ok_or_else(err)?;
-                    return fin(Part { year: y, month: Some(m), day: None, dual_year: None });
+                    return fin(Part {
+                        year: y,
+                        month: Some(m),
+                        day: None,
+                        dual_year: None,
+                    });
                 }
             }
             Err(err())
@@ -483,21 +533,40 @@ fn parse_part(cal: Calendar, toks: &[String]) -> Result<Part, DateError> {
             let m = parse_month(cal, &toks[0]).ok_or_else(err)?;
             let (y, alt) = parse_year_token(&toks[1]).ok_or_else(err)?;
             validate(cal, y, Some(m), None).ok_or_else(err)?;
-            fin(Part { year: y, month: Some(m), day: None, dual_year: alt })
+            fin(Part {
+                year: y,
+                month: Some(m),
+                day: None,
+                dual_year: alt,
+            })
         }
         3 => {
             // "3 MAR 1850" or "March 3, 1850" / "March 3 1850"
             let (d, m, ytok) = if let Some(m) = parse_month(cal, &toks[1]) {
                 (toks[0].as_str(), m, &toks[2])
             } else if let Some(m) = parse_month(cal, &toks[0]) {
-                (toks[1].trim_end_matches(',').trim_end_matches("st").trim_end_matches("nd").trim_end_matches("rd").trim_end_matches("th"), m, &toks[2])
+                (
+                    toks[1]
+                        .trim_end_matches(',')
+                        .trim_end_matches("st")
+                        .trim_end_matches("nd")
+                        .trim_end_matches("rd")
+                        .trim_end_matches("th"),
+                    m,
+                    &toks[2],
+                )
             } else {
                 return Err(err());
             };
             let d: u8 = d.parse().map_err(|_| err())?;
             let (y, alt) = parse_year_token(ytok).ok_or_else(err)?;
             validate(cal, y, Some(m), Some(d)).ok_or_else(err)?;
-            fin(Part { year: y, month: Some(m), day: Some(d), dual_year: alt })
+            fin(Part {
+                year: y,
+                month: Some(m),
+                day: Some(d),
+                dual_year: alt,
+            })
         }
         _ => Err(err()),
     }
@@ -526,15 +595,30 @@ fn validate(cal: Calendar, y: i32, m: Option<u8>, d: Option<u8>) -> Option<()> {
 }
 
 fn tokenize(s: &str) -> Vec<String> {
-    s.replace(',', " ").split_whitespace().map(|t| t.to_string()).collect()
+    s.replace(',', " ")
+        .split_whitespace()
+        .map(|t| t.to_string())
+        .collect()
 }
 
 impl GenDate {
     pub fn exact(p: Part) -> GenDate {
-        GenDate { calendar: Calendar::Gregorian, qualifier: Qualifier::Exact, a: Some(p), b: None, phrase: None }
+        GenDate {
+            calendar: Calendar::Gregorian,
+            qualifier: Qualifier::Exact,
+            a: Some(p),
+            b: None,
+            phrase: None,
+        }
     }
     pub fn phrase(text: &str) -> GenDate {
-        GenDate { calendar: Calendar::Gregorian, qualifier: Qualifier::Exact, a: None, b: None, phrase: Some(text.to_string()) }
+        GenDate {
+            calendar: Calendar::Gregorian,
+            qualifier: Qualifier::Exact,
+            a: None,
+            b: None,
+            phrase: Some(text.to_string()),
+        }
     }
 
     /// Parse GEDCOM-style and common human date strings. Falls back to a phrase on failure only via [`GenDate::parse_lenient`].
@@ -578,10 +662,18 @@ impl GenDate {
         let kw = kw.trim_end_matches('.').to_string();
         let simple = |q: Qualifier, rest: &[String]| -> Result<GenDate, DateError> {
             let p = parse_part(cal, rest)?;
-            Ok(GenDate { calendar: cal, qualifier: q, a: Some(p), b: None, phrase: None })
+            Ok(GenDate {
+                calendar: cal,
+                qualifier: q,
+                a: Some(p),
+                b: None,
+                phrase: None,
+            })
         };
         match kw.as_str() {
-            "ABT" | "ABOUT" | "CIRCA" | "C" | "CA" | "YAKLASIK" | "YAKLAŞIK" => simple(Qualifier::About, &toks[1..]),
+            "ABT" | "ABOUT" | "CIRCA" | "C" | "CA" | "YAKLASIK" | "YAKLAŞIK" => {
+                simple(Qualifier::About, &toks[1..])
+            }
             "EST" | "ESTIMATED" => simple(Qualifier::Estimated, &toks[1..]),
             "CAL" | "CALCULATED" => simple(Qualifier::Calculated, &toks[1..]),
             "BEF" | "BEFORE" | "ONCE" | "ÖNCE" => simple(Qualifier::Before, &toks[1..]),
@@ -594,14 +686,26 @@ impl GenDate {
                     .ok_or_else(|| DateError::Invalid(s.to_string()))?;
                 let a = parse_part(cal, &rest[..pos])?;
                 let b = parse_part(cal, &rest[pos + 1..])?;
-                Ok(GenDate { calendar: cal, qualifier: Qualifier::Between, a: Some(a), b: Some(b), phrase: None })
+                Ok(GenDate {
+                    calendar: cal,
+                    qualifier: Qualifier::Between,
+                    a: Some(a),
+                    b: Some(b),
+                    phrase: None,
+                })
             }
             "FROM" => {
                 let rest = &toks[1..];
                 if let Some(pos) = rest.iter().position(|t| t.eq_ignore_ascii_case("TO")) {
                     let a = parse_part(cal, &rest[..pos])?;
                     let b = parse_part(cal, &rest[pos + 1..])?;
-                    Ok(GenDate { calendar: cal, qualifier: Qualifier::FromTo, a: Some(a), b: Some(b), phrase: None })
+                    Ok(GenDate {
+                        calendar: cal,
+                        qualifier: Qualifier::FromTo,
+                        a: Some(a),
+                        b: Some(b),
+                        phrase: None,
+                    })
                 } else {
                     simple(Qualifier::From, rest)
                 }
@@ -650,7 +754,15 @@ impl GenDate {
     }
 
     pub fn is_exact_day(&self) -> bool {
-        self.qualifier == Qualifier::Exact && matches!(self.a, Some(Part { month: Some(_), day: Some(_), .. }))
+        self.qualifier == Qualifier::Exact
+            && matches!(
+                self.a,
+                Some(Part {
+                    month: Some(_),
+                    day: Some(_),
+                    ..
+                })
+            )
     }
 
     // ---------- formatting ----------
@@ -705,11 +817,19 @@ impl GenDate {
             Qualifier::From => body("FROM", vec![fa]),
             Qualifier::To => body("TO", vec![fa]),
             Qualifier::Between => {
-                let fb = self.b.as_ref().map(|b| self.fmt_part_gedcom(b)).unwrap_or_default();
+                let fb = self
+                    .b
+                    .as_ref()
+                    .map(|b| self.fmt_part_gedcom(b))
+                    .unwrap_or_default();
                 body("BET", vec![fa, "AND".into(), fb])
             }
             Qualifier::FromTo => {
-                let fb = self.b.as_ref().map(|b| self.fmt_part_gedcom(b)).unwrap_or_default();
+                let fb = self
+                    .b
+                    .as_ref()
+                    .map(|b| self.fmt_part_gedcom(b))
+                    .unwrap_or_default();
                 body("FROM", vec![fa, "TO".into(), fb])
             }
         }
@@ -723,7 +843,9 @@ impl GenDate {
         }
         if let Some(m) = p.month {
             let name = match (self.calendar, loc) {
-                (Calendar::Gregorian | Calendar::Julian, Locale::Tr) => GREG_TR_LONG[(m - 1) as usize],
+                (Calendar::Gregorian | Calendar::Julian, Locale::Tr) => {
+                    GREG_TR_LONG[(m - 1) as usize]
+                }
                 (Calendar::Gregorian | Calendar::Julian, Locale::En) => GREG_EN[(m - 1) as usize],
                 _ => month_table(self.calendar)[(m - 1) as usize],
             };
@@ -743,7 +865,11 @@ impl GenDate {
             return self.phrase.clone().unwrap_or_default();
         };
         let fa = self.fmt_part_locale(a, loc);
-        let fb = self.b.as_ref().map(|b| self.fmt_part_locale(b, loc)).unwrap_or_default();
+        let fb = self
+            .b
+            .as_ref()
+            .map(|b| self.fmt_part_locale(b, loc))
+            .unwrap_or_default();
         let cal = match (self.calendar, loc) {
             (Calendar::Gregorian, _) => "",
             (Calendar::Julian, _) => " (Julian)",
@@ -848,14 +974,29 @@ mod tests {
     fn parse_forms() {
         let d = GenDate::parse("3 Mar 1850").unwrap();
         assert_eq!(d.a, Some(Part::ymd(1850, 3, 3)));
-        assert_eq!(GenDate::parse("abt 1900").unwrap().qualifier, Qualifier::About);
+        assert_eq!(
+            GenDate::parse("abt 1900").unwrap().qualifier,
+            Qualifier::About
+        );
         let b = GenDate::parse("bet 1880 and 1890").unwrap();
         assert_eq!(b.qualifier, Qualifier::Between);
         assert_eq!(b.b, Some(Part::year_only(1890)));
-        assert_eq!(GenDate::parse("March 3, 1850").unwrap().a, Some(Part::ymd(1850, 3, 3)));
-        assert_eq!(GenDate::parse("3 Mart 1850").unwrap().a, Some(Part::ymd(1850, 3, 3)));
-        assert_eq!(GenDate::parse("1850-03-03").unwrap().a, Some(Part::ymd(1850, 3, 3)));
-        assert_eq!(GenDate::parse("3.3.1850").unwrap().a, Some(Part::ymd(1850, 3, 3)));
+        assert_eq!(
+            GenDate::parse("March 3, 1850").unwrap().a,
+            Some(Part::ymd(1850, 3, 3))
+        );
+        assert_eq!(
+            GenDate::parse("3 Mart 1850").unwrap().a,
+            Some(Part::ymd(1850, 3, 3))
+        );
+        assert_eq!(
+            GenDate::parse("1850-03-03").unwrap().a,
+            Some(Part::ymd(1850, 3, 3))
+        );
+        assert_eq!(
+            GenDate::parse("3.3.1850").unwrap().a,
+            Some(Part::ymd(1850, 3, 3))
+        );
         assert_eq!(GenDate::parse("MAR 1850").unwrap().a.unwrap().day, None);
         assert_eq!(GenDate::parse("44 BC").unwrap().a.unwrap().year, -44);
         let j = GenDate::parse("@#DJULIAN@ 5 OCT 1582").unwrap();
@@ -867,7 +1008,13 @@ mod tests {
         assert_eq!(fr.a, Some(Part::ymd(8, 2, 18)));
         assert!(GenDate::parse("30 FEB 1850").is_err());
         assert!(GenDate::parse("").is_err());
-        assert_eq!(GenDate::parse("(in the reign of Victoria)").unwrap().phrase.unwrap(), "in the reign of Victoria");
+        assert_eq!(
+            GenDate::parse("(in the reign of Victoria)")
+                .unwrap()
+                .phrase
+                .unwrap(),
+            "in the reign of Victoria"
+        );
     }
 
     #[test]
@@ -920,8 +1067,20 @@ mod tests {
     #[test]
     fn ages() {
         let b = GenDate::parse("3 MAR 1850").unwrap();
-        assert_eq!(age_years(&b, &GenDate::parse("2 MAR 1900").unwrap()), Some(49));
-        assert_eq!(age_years(&b, &GenDate::parse("3 MAR 1900").unwrap()), Some(50));
-        assert_eq!(age_years(&GenDate::parse("1850").unwrap(), &GenDate::parse("1900").unwrap()), Some(50));
+        assert_eq!(
+            age_years(&b, &GenDate::parse("2 MAR 1900").unwrap()),
+            Some(49)
+        );
+        assert_eq!(
+            age_years(&b, &GenDate::parse("3 MAR 1900").unwrap()),
+            Some(50)
+        );
+        assert_eq!(
+            age_years(
+                &GenDate::parse("1850").unwrap(),
+                &GenDate::parse("1900").unwrap()
+            ),
+            Some(50)
+        );
     }
 }

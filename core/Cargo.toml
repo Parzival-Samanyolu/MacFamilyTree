@@ -1,0 +1,16 @@
+[package]
+name = "kintree-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Portable genealogy data model, dates, names, GEDCOM and storage for KinTree"
+
+[dependencies]
+rusqlite = { version = "0.32", features = ["bundled"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+
+[dev-dependencies]
+proptest = "1"

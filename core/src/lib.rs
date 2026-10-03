@@ -3,6 +3,7 @@ pub mod duplicates;
 pub mod facts;
 pub mod gedcom;
 pub mod kinship_terms;
+pub mod layout;
 pub mod model;
 pub mod name;
 pub mod quality;

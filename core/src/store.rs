@@ -244,6 +244,18 @@ impl<'a> Tx<'a> {
         Ok(true)
     }
 
+    /// All ids of a table in insertion order.
+    pub fn all_ids(&self, table: &str) -> Result<Vec<String>> {
+        let t = table_name(table)?;
+        let mut st = self
+            .conn
+            .prepare_cached(&format!("SELECT id FROM {} ORDER BY rowid", t))?;
+        let ids = st
+            .query_map([], |r| r.get::<_, String>(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(ids)
+    }
+
     /// IDs of rows in `table` where `col = value`.
     pub fn ids_where(&self, table: &str, col: &str, value: &str) -> Result<Vec<String>> {
         let t = table_name(table)?;
@@ -690,6 +702,32 @@ impl Store {
         let mut st = self.conn.prepare(&sql)?;
         let out = st
             .query_map([], |r| {
+                let mut m = Row::new();
+                for (i, c) in cols.iter().enumerate() {
+                    m.insert(c.clone(), value_ref(r.get_ref(i)?));
+                }
+                Ok(m)
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(out)
+    }
+
+    /// Rows of `table` where `col = value`, in insertion order (single query).
+    pub fn rows_where(&self, table: &str, col: &str, value: &str) -> Result<Vec<Row>> {
+        let t = table_name(table)?;
+        let cols = &self.columns[t];
+        if col != "id" && !cols.iter().any(|c| c == col) {
+            return Err(StoreError::Other(format!("no column {}.{}", t, col)));
+        }
+        let sql = format!(
+            "SELECT {} FROM {} WHERE {} = ?1 ORDER BY rowid",
+            cols.join(","),
+            t,
+            col
+        );
+        let mut st = self.conn.prepare_cached(&sql)?;
+        let out = st
+            .query_map([value], |r| {
                 let mut m = Row::new();
                 for (i, c) in cols.iter().enumerate() {
                     m.insert(c.clone(), value_ref(r.get_ref(i)?));

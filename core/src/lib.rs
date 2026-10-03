@@ -6,6 +6,7 @@ pub mod kinship_terms;
 pub mod layout;
 pub mod model;
 pub mod name;
+pub mod places;
 pub mod quality;
 pub mod relationship;
 pub mod stats;

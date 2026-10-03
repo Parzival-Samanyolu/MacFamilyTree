@@ -62,19 +62,19 @@ pub fn score_pair(f: &Facts, a: &str, b: &str) -> Option<Candidate> {
     } else if phon {
         reasons.push("similar-sounding surname".into());
     }
-    let mut score = name * 0.55;
+    let mut score = name * 0.6;
     // Birth year
     match (year_of(f, a), year_of(f, b)) {
         (Some(x), Some(y)) => {
             let d = (x - y).abs();
             if d == 0 {
-                score += 0.2;
+                score += 0.25;
                 reasons.push("same birth year".into());
             } else if d <= 2 {
-                score += 0.12;
+                score += 0.15;
                 reasons.push("birth years within 2".into());
             } else if d > 5 {
-                score -= 0.25;
+                score -= 0.3;
                 reasons.push("birth years differ".into());
             }
         }

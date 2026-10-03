@@ -316,6 +316,19 @@ impl Store {
         })
     }
 
+    /// Write a consistent copy of the whole project (including uncommitted-to-main-file WAL content) to a new file.
+    pub fn backup_to(&self, target: &Path) -> Result<()> {
+        if target.exists() {
+            return Err(StoreError::Other(format!(
+                "{} already exists",
+                target.display()
+            )));
+        }
+        self.conn
+            .execute("VACUUM INTO ?1", [target.to_string_lossy().as_ref()])?;
+        Ok(())
+    }
+
     pub fn schema_version(&self) -> i64 {
         self.conn
             .pragma_query_value(None, "user_version", |r| r.get(0))

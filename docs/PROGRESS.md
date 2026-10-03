@@ -25,13 +25,32 @@
   rewiring, single undo step), `stats` (all listed statistics with drill-down ids), `synth` generator.
   Undo now restores rows to their exact original position (rowid carried in history images).
 
-## In progress / next
-- Phase 1 remainder: place engine, relationship engine, living-person rule, Double Metaphone + Daitch–Mokotoff,
-  coverage measurement (target ≥ 90%), remaining typed records (sources, citations, media, notes, tasks…).
-- Phase 2 remainder: GEDZIP, CSV and Gramps XML import; CSV/JSON export; richer vendor-specific mappings (_MARNM etc. are preserved but not interpreted); import-log UI.
+- **Phase 4 (Interactive tree)** — `layout` engine (Reingold–Tilford contours; ancestors, descendants, hourglass; multiple spouses;
+  collapse; pedigree-collapse stubs; property test for overlaps), SVG renderer with pan/zoom/minimap/keyboard/context menu,
+  card designer + saved styles, SVG/PNG export, print.
+- **Phase 3 (Basic UI)** — app shell (sidebar, toolbar, status bar, command palette, help, toasts), Dashboard, People (virtualised list),
+  person editor (Overview, Names, Events, Relationships, Notes & sources), guided start, import log, export options,
+  Settings (language, theme, high contrast, text size, naming convention), file-backed projects + rolling backups.
+- **Phase 5 (partial)** — fan chart, relationship calculator, statistics with drill-down.
+- **Phase 9** — plausibility checker, duplicates + merge, relationship calculator (UI + core).
+- **Quality gates met so far**: `cargo test --workspace` (93 tests), clippy `-D warnings`, rustfmt, ESLint (0 problems), Prettier,
+  13 Vitest tests, 18 Playwright E2E tests (incl. axe-core on all main views), `npm audit` 0 vulnerabilities.
 
-## Blocked
-- Nothing. Note: Tauri shell (Phase 3) needs system webkit libs; to be installed in CI/dev environment.
+## Next (priority order)
+1. Media, sources/repositories/notes/tasks browsers (Phase 6) — schema exists.
+2. Maps, timeline, calendar (Phase 7) — place engine exists.
+3. Reports, stories, website export (Phase 8).
+4. Project encryption, CSV/GEDZIP/Gramps import, JSON/CSV export (Phases 2, 11).
+5. Canvas/WebGL renderer for 10k-node trees and a 60 fps measurement; typed bulk-insert path for GEDCOM import speed.
+6. Verify the Tauri bundle on macOS/Windows/Linux; add native file dialogs.
+7. Coverage tooling and the ≥ 90% core coverage gate.
+
+## Known issues
+* One E2E test ("tree: changing generations and direction") failed once in a full run and passed in 14 later runs (10 of them under heavy CPU load); cause not identified. CI allows a single retry.
+
+## Blocked / unverifiable here
+* Tauri desktop build (no WebKitGTK in this container). Source + CI job are in place.
+* macOS and Windows CI runs (only Linux executed).
 
 ## Not started
-Phases 3–12 (UI, tree, charts, media, maps, reports, quality tools, 3D, sync/encryption, packaging).
+Phases 6 (except citations/notes), 7, 8, 10, 11 (except backups, i18n and accessibility), 12 (except benchmarks).

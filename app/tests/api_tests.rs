@@ -227,11 +227,10 @@ fn sample_project_lists_pages_trees_and_relationships() {
         let d = call(&mut s, "person.get", json!({"id": it["id"]}));
         if !d["child_families"].as_array().unwrap().is_empty()
             && !d["partner_families"].as_array().unwrap().is_empty()
-            && d["partner_families"][0]["children"]
+            && !d["partner_families"][0]["children"]
                 .as_array()
                 .unwrap()
-                .len()
-                >= 1
+                .is_empty()
         {
             root = Some(it["id"].as_str().unwrap().to_string());
             break;
@@ -529,4 +528,365 @@ fn naming_cultures_for_children() {
         call(&mut s, "person.get", json!({"id": c["person_id"]}))["summary"]["surname"],
         "Pérez García"
     );
+}
+
+#[test]
+fn dashboard_on_this_day_upcoming_and_quality_score() {
+    let mut s = fresh();
+    let a = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Ayşe", "surname": "Demir", "sex": "F"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": a, "kind": "BIRT", "date_text": "10 Mar 1990"}),
+    );
+    let b = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Old", "surname": "Timer", "sex": "M"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": b, "kind": "BIRT", "date_text": "10 Mar 1800"}),
+    );
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": b, "kind": "DEAT", "date_text": "11 Mar 1870"}),
+    );
+    call(
+        &mut s,
+        "person.update",
+        json!({"id": a, "bookmarked": true}),
+    );
+
+    let d = call(
+        &mut s,
+        "dashboard.data",
+        json!({"year": 2026, "month": 3, "day": 10}),
+    );
+    let otd = d["on_this_day"].as_array().unwrap();
+    assert_eq!(otd.len(), 2, "both births fall on 10 March");
+    assert!(otd
+        .iter()
+        .any(|x| x["years_ago"] == 36 && x["person"]["given"] == "Ayşe"));
+    let up = d["upcoming"].as_array().unwrap();
+    assert_eq!(
+        up.len(),
+        1,
+        "only the living person has an upcoming birthday: {up:?}"
+    );
+    assert_eq!(up[0]["days"], 0);
+    assert_eq!(up[0]["turning"], 36);
+    assert_eq!(d["bookmarks"][0]["given"], "Ayşe");
+    assert!(d["quality"]["score"].as_f64().unwrap() <= 100.0);
+    assert!(d["random"]["id"].is_string());
+    // a day later the birthday is no longer "upcoming" (next is a year away)
+    let d2 = call(
+        &mut s,
+        "dashboard.data",
+        json!({"year": 2026, "month": 3, "day": 11}),
+    );
+    assert!(d2["upcoming"].as_array().unwrap().is_empty());
+    assert_eq!(
+        d2["on_this_day"].as_array().unwrap().len(),
+        1,
+        "the death on 11 March"
+    );
+}
+
+#[test]
+fn date_parse_preview() {
+    let mut s = fresh();
+    let ok = call(&mut s, "date.parse", json!({"text": "abt 3 Mar 1850"}));
+    assert_eq!(ok["valid"], true);
+    assert_eq!(ok["gedcom"], "ABT 3 MAR 1850");
+    assert_eq!(
+        call(&mut s, "date.parse", json!({"text": "31 Feb 1850"}))["valid"],
+        false
+    );
+    assert_eq!(
+        call(&mut s, "date.parse", json!({"text": ""}))["valid"],
+        true
+    );
+}
+
+#[test]
+fn notes_and_citations_are_atomic_and_undoable() {
+    let mut s = fresh();
+    let id = call(
+        &mut s,
+        "person.create",
+        json!({"given": "A", "surname": "B"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    call(
+        &mut s,
+        "note.add",
+        json!({"target_type": "person", "target_id": id, "body": "Remember to check the **census**."}),
+    );
+    call(
+        &mut s,
+        "citation.add",
+        json!({"target_type": "person", "target_id": id, "new_source_title": "1881 Census", "page": "folio 12", "quality": "3"}),
+    );
+    let p = call(&mut s, "person.get", json!({"id": id}));
+    assert_eq!(p["notes"][0]["body"], "Remember to check the **census**.");
+    assert_eq!(p["citations"][0]["source_title"], "1881 Census");
+    assert_eq!(p["citations"][0]["page"], "folio 12");
+    // re-use the same source for a second citation
+    let src = p["citations"][0]["source_id"].as_str().unwrap().to_string();
+    call(
+        &mut s,
+        "citation.add",
+        json!({"target_type": "person", "target_id": id, "source_id": src, "page": "folio 13"}),
+    );
+    assert_eq!(
+        call(&mut s, "rec.list", json!({"table": "source"}))
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        err(
+            &mut s,
+            "citation.add",
+            json!({"target_type": "person", "target_id": id})
+        ),
+        "store"
+    );
+
+    let link = p["notes"][0]["link_id"].as_str().unwrap().to_string();
+    call(&mut s, "note.remove", json!({"link_id": link}));
+    assert!(call(&mut s, "person.get", json!({"id": id}))["notes"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(
+        call(&mut s, "rec.list", json!({"table": "note"}))
+            .as_array()
+            .unwrap()
+            .is_empty(),
+        "orphaned note deleted"
+    );
+    call(&mut s, "history.undo", json!({}));
+    assert_eq!(
+        call(&mut s, "person.get", json!({"id": id}))["notes"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn tree_cards_can_include_places() {
+    let mut s = fresh();
+    let id = call(
+        &mut s,
+        "person.create",
+        json!({"given": "A", "surname": "B"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": id, "kind": "BIRT", "date_text": "1900", "place_text": "Konya, Turkey"}),
+    );
+    let plain = call(
+        &mut s,
+        "tree.layout",
+        json!({"root": id, "mode": "ancestors"}),
+    );
+    assert!(plain["people"][&id]["birth_place"].is_null());
+    let with = call(
+        &mut s,
+        "tree.layout",
+        json!({"root": id, "mode": "ancestors", "show_places": true}),
+    );
+    assert_eq!(with["people"][&id]["birth_place"], "Konya, Turkey");
+}
+
+#[test]
+fn blank_surname_means_inherit_not_empty() {
+    // The guided-start wizard sends "" for an untouched surname field; that must not override inheritance.
+    let mut s = fresh();
+    let me = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Emre", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let dad = call(
+        &mut s,
+        "relative.add",
+        json!({"person_id": me, "kind": "father", "given": "Ali", "surname": ""}),
+    );
+    assert_eq!(
+        call(&mut s, "person.get", json!({"id": dad["person_id"]}))["summary"]["surname"],
+        "Kaya"
+    );
+    let sib = call(
+        &mut s,
+        "relative.add",
+        json!({"person_id": me, "kind": "sibling", "given": "Zeynep", "surname": "   "}),
+    );
+    assert_eq!(
+        call(&mut s, "person.get", json!({"id": sib["person_id"]}))["summary"]["surname"],
+        "Kaya"
+    );
+}
+
+#[test]
+fn file_backed_projects_persist_back_up_and_restore() {
+    let dir = std::env::temp_dir().join(format!("kt-proj-{}", kintree_core::store::new_id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("family.ktree");
+    let mut s = Session::new();
+    call(
+        &mut s,
+        "project.create",
+        json!({"path": path.display().to_string()}),
+    );
+    assert_eq!(
+        err(
+            &mut s,
+            "project.create",
+            json!({"path": path.display().to_string()})
+        ),
+        "exists"
+    );
+    let id = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Persist", "surname": "Me", "sex": "F"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": id, "kind": "BIRT", "date_text": "1900"}),
+    );
+
+    // manual backup is a complete, standalone copy
+    let bak = dir.join("manual.bak");
+    call(
+        &mut s,
+        "project.backup",
+        json!({"path": bak.display().to_string()}),
+    );
+    assert_eq!(
+        err(
+            &mut s,
+            "project.backup",
+            json!({"path": bak.display().to_string()})
+        ),
+        "exists"
+    );
+    call(&mut s, "project.close", json!({}));
+
+    // reopening keeps data (autosave) and creates a rolling backup next to the project
+    let mut s2 = Session::new();
+    call(
+        &mut s2,
+        "project.open",
+        json!({"path": path.display().to_string()}),
+    );
+    assert_eq!(call(&mut s2, "project.status", json!({}))["persons"], 1);
+    assert_eq!(
+        call(&mut s2, "person.get", json!({"id": id}))["events"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    let backups: Vec<_> = std::fs::read_dir(dir.join("backups")).unwrap().collect();
+    assert_eq!(backups.len(), 1);
+    // undo history survives a restart too
+    assert_eq!(call(&mut s2, "project.status", json!({}))["can_undo"], true);
+
+    // restore the manual backup into a new working copy after deleting the person
+    call(&mut s2, "person.delete", json!({"id": id}));
+    let restored = dir.join("restored.ktree");
+    let mut s3 = Session::new();
+    call(
+        &mut s3,
+        "project.restore",
+        json!({"from": bak.display().to_string(), "to": restored.display().to_string()}),
+    );
+    assert_eq!(call(&mut s3, "project.status", json!({}))["persons"], 1);
+    assert_eq!(
+        err(
+            &mut s3,
+            "project.open",
+            json!({"path": dir.join("nope.ktree").display().to_string()})
+        ),
+        "not_found"
+    );
+}
+
+#[test]
+fn upcoming_birthdays_handle_month_ends_and_leap_days() {
+    let mut s = fresh();
+    for (given, date) in [
+        ("Jan31", "31 Jan 1980"),
+        ("Leap", "29 Feb 1980"),
+        ("Far", "15 Aug 1980"),
+    ] {
+        let id = call(
+            &mut s,
+            "person.create",
+            json!({"given": given, "surname": "X", "sex": "F"}),
+        )["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        call(
+            &mut s,
+            "event.put",
+            json!({"owner_type": "person", "owner_id": id, "kind": "BIRT", "date_text": date}),
+        );
+    }
+    // 27 Jan 2026: the 31st is 4 days away (not "28 Jan"); 29 Feb falls on 28 Feb in 2026 (32 days away -> not listed)
+    let d = call(
+        &mut s,
+        "dashboard.data",
+        json!({"year": 2026, "month": 1, "day": 27}),
+    );
+    let up = d["upcoming"].as_array().unwrap();
+    assert_eq!(up.len(), 1, "{up:?}");
+    assert_eq!(up[0]["person"]["given"], "Jan31");
+    assert_eq!(up[0]["days"], 4);
+    // 25 Feb 2026: leap-day birthday is observed on 28 Feb (3 days)
+    let d = call(
+        &mut s,
+        "dashboard.data",
+        json!({"year": 2026, "month": 2, "day": 25}),
+    );
+    let leap = d["upcoming"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|x| x["person"]["given"] == "Leap")
+        .expect("leap-day birthday listed");
+    assert_eq!(leap["days"], 3);
 }

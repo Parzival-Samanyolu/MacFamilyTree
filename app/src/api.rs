@@ -33,6 +33,11 @@ impl ApiError {
         }
     }
 }
+impl ApiError {
+    pub fn internal(message: impl Into<String>) -> ApiError {
+        ApiError::new("internal", message)
+    }
+}
 impl From<StoreError> for ApiError {
     fn from(e: StoreError) -> Self {
         ApiError::new("store", e.to_string())
@@ -69,6 +74,10 @@ impl Session {
 
 fn s(args: &Value, k: &str) -> Option<String> {
     args.get(k).and_then(|v| v.as_str()).map(String::from)
+}
+/// Optional string argument: absent, null and blank all mean "not given".
+fn opt_s(args: &Value, k: &str) -> Option<String> {
+    s(args, k).filter(|v| !v.trim().is_empty())
 }
 fn req(args: &Value, k: &str) -> Result<String, ApiError> {
     s(args, k).ok_or_else(|| ApiError::new("bad_args", format!("missing `{}`", k)))
@@ -187,6 +196,55 @@ fn summary(store: &Store, id: &str) -> Result<Value, ApiError> {
         "birth_text": bt, "birth_year": by, "death_text": dt, "death_year": dy,
         "living": living, "life": life
     }))
+}
+
+fn place_chain(store: &Store, mut id: Option<String>) -> Option<String> {
+    let mut parts = vec![];
+    let mut guard = 0;
+    while let Some(pid) = id {
+        let (name, parent): (String, Option<String>) = store
+            .conn()
+            .query_row(
+                "SELECT name, parent_id FROM place WHERE id = ?1",
+                [&pid],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .ok()?;
+        parts.push(name);
+        id = parent;
+        guard += 1;
+        if guard > 32 {
+            break;
+        }
+    }
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join(", "))
+    }
+}
+
+/// Add `birth_place` / `death_place` to a person summary (for tree cards).
+fn with_places(store: &Store, mut v: Value) -> Value {
+    let id = v["id"].as_str().unwrap_or("").to_string();
+    for (key, kinds) in [
+        ("birth_place", ["BIRT", "CHR", "BAPM"]),
+        ("death_place", ["DEAT", "BURI", "CREM"]),
+    ] {
+        let mut found = Value::Null;
+        for k in kinds {
+            let pid: Option<String> = store
+                .conn()
+                .query_row("SELECT place_id FROM event WHERE owner_type='person' AND owner_id=?1 AND kind=?2 AND place_id IS NOT NULL ORDER BY rowid LIMIT 1", rusqlite::params![&id, k], |r| r.get(0))
+                .ok();
+            if let Some(name) = place_chain(store, pid) {
+                found = Value::from(name);
+                break;
+            }
+        }
+        v[key] = found;
+    }
+    v
 }
 
 fn citations_of(store: &Store, ttype: &str, tid: &str) -> Result<Vec<Value>, ApiError> {
@@ -660,7 +718,7 @@ fn add_relative(
                     "this person's parent family already has two parents",
                 ));
             }
-            let surname = s(args, "surname").unwrap_or_else(|| {
+            let surname = opt_s(args, "surname").unwrap_or_else(|| {
                 if kind == "father" {
                     anchor_name.surname.clone()
                 } else {
@@ -684,7 +742,7 @@ fn add_relative(
             (surname, fid, pid)
         }
         "partner" => {
-            let surname = s(args, "surname").unwrap_or_default();
+            let surname = opt_s(args, "surname").unwrap_or_default();
             let pid = tx.create_person(&PersonName::new(&given, &surname), &sex_s)?;
             let fid = tx.create_family(
                 Some(&anchor),
@@ -711,7 +769,7 @@ fn add_relative(
                 }
             };
             let (father, mother) = parents_names(tx, &fid)?;
-            let surname = s(args, "surname").unwrap_or_else(|| {
+            let surname = opt_s(args, "surname").unwrap_or_else(|| {
                 suggest_child_surname(cult, father.as_ref(), mother.as_ref(), sex)
             });
             let pid = tx.create_person(&PersonName::new(&given, &surname), &sex_s)?;
@@ -733,7 +791,7 @@ fn add_relative(
             } else {
                 suggest_child_surname(cult, father.as_ref(), mother.as_ref(), sex)
             };
-            let surname = s(args, "surname").unwrap_or(default);
+            let surname = opt_s(args, "surname").unwrap_or(default);
             let pid = tx.create_person(&PersonName::new(&given, &surname), &sex_s)?;
             tx.add_child(&fid, &pid, "")?;
             (surname, fid, pid)
@@ -795,7 +853,11 @@ fn tree_layout(store: &Store, args: &Value) -> Res {
     let mut people: Map<String, Value> = Map::new();
     for n in &l.nodes {
         if !people.contains_key(&n.person_id) {
-            people.insert(n.person_id.clone(), summary(store, &n.person_id)?);
+            let mut sm = summary(store, &n.person_id)?;
+            if b(args, "show_places", false) {
+                sm = with_places(store, sm);
+            }
+            people.insert(n.person_id.clone(), sm);
         }
     }
     Ok(json!({"layout": l, "people": people}))
@@ -934,8 +996,153 @@ fn import_bytes(sess: &mut Session, bytes: &[u8]) -> Res {
     )
 }
 
+/// Copy the project into `<dir>/backups/` with a timestamp and keep only the newest `keep` copies.
+fn rolling_backup(path: &std::path::Path, keep: usize) -> std::io::Result<()> {
+    let dir = path
+        .parent()
+        .unwrap_or(std::path::Path::new("."))
+        .join("backups");
+    std::fs::create_dir_all(&dir)?;
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("project");
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    // Use SQLite's own consistent snapshot instead of a raw file copy (WAL mode keeps recent writes in a side file).
+    let dest = dir.join(format!("{}-{:012}.bak", stem, ts));
+    if dest.exists() {
+        return Ok(());
+    }
+    let store = Store::open(path).map_err(|e| std::io::Error::other(e.to_string()))?;
+    store
+        .backup_to(&dest)
+        .map_err(|e| std::io::Error::other(e.to_string()))?;
+    let prefix = format!("{}-", stem);
+    let mut all: Vec<PathBuf> = std::fs::read_dir(&dir)?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| {
+            p.file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n.starts_with(&prefix) && n.ends_with(".bak"))
+                .unwrap_or(false)
+        })
+        .collect();
+    all.sort();
+    while all.len() > keep {
+        let old = all.remove(0);
+        let _ = std::fs::remove_file(old);
+    }
+    Ok(())
+}
+
 fn sample_gedcom() -> String {
     kintree_core::synth::generate_gedcom(30, 2024)
+}
+
+fn dashboard(store: &Store, args: &Value) -> Res {
+    use kintree_core::date::{jdn_to_gregorian, Calendar};
+    let facts = Facts::load(store)?;
+    // `today` may be injected (tests, time zones); default is the system clock (UTC).
+    let (ty, tm, td) = match (args.get("year"), args.get("month"), args.get("day")) {
+        (Some(y), Some(m), Some(d)) => (
+            y.as_i64().unwrap_or(2000) as i32,
+            m.as_u64().unwrap_or(1) as u8,
+            d.as_u64().unwrap_or(1) as u8,
+        ),
+        _ => {
+            let secs = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+            jdn_to_gregorian(2_440_588 + (secs / 86_400) as i64)
+        }
+    };
+    let today_jdn = kintree_core::date::to_jdn(Calendar::Gregorian, ty, tm, td);
+    let mut on_this_day = vec![];
+    let mut upcoming: Vec<(i64, Value)> = vec![];
+    for e in &facts.events {
+        let (Some(st), Some(en)) = (e.start, e.end) else {
+            continue;
+        };
+        if st != en
+            || e.date
+                .as_ref()
+                .map(|d| d.calendar != Calendar::Gregorian)
+                .unwrap_or(true)
+        {
+            continue;
+        }
+        let (y, m, d) = jdn_to_gregorian(st);
+        let person = if e.owner_type == "person" {
+            Some(e.owner_id.clone())
+        } else {
+            None
+        };
+        if m == tm && d == td && matches!(e.kind.as_str(), "BIRT" | "DEAT" | "MARR") {
+            let ids: Vec<String> = match &person {
+                Some(p) => vec![p.clone()],
+                None => facts
+                    .families
+                    .iter()
+                    .find(|f| f.id == e.owner_id)
+                    .map(|f| f.partners.clone())
+                    .unwrap_or_default(),
+            };
+            for id in ids {
+                on_this_day.push(json!({"kind": e.kind, "year": y, "years_ago": ty - y, "person": summary(store, &id)?}));
+            }
+        }
+        if e.kind == "BIRT" {
+            if let Some(p) = &person {
+                // next occurrence of this birthday on or after today (29 Feb falls on 28 Feb in common years)
+                let occurrence = |year: i32| {
+                    let day = d.min(kintree_core::date::days_in_month(
+                        Calendar::Gregorian,
+                        year,
+                        m,
+                    ));
+                    kintree_core::date::to_jdn(Calendar::Gregorian, year, m, day)
+                };
+                let mut next = occurrence(ty);
+                if next < today_jdn {
+                    next = occurrence(ty + 1);
+                }
+                let days = next - today_jdn;
+                if days <= 30 && !facts.has_death_event(p) && ty - y < 110 {
+                    let sm = summary(store, p)?;
+                    upcoming.push((days, json!({"days": days, "turning": ty - y + i32::from(days > 0 && (m, d) < (tm, td)), "person": sm})));
+                }
+            }
+        }
+    }
+    upcoming.sort_by_key(|x| x.0);
+    let random = if facts.order.is_empty() {
+        Value::Null
+    } else {
+        let secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let id = &facts.order[(secs as usize) % facts.order.len()];
+        summary(store, id)?
+    };
+    let findings = quality::check_all(store, &Rules::default())?;
+    let count = |sev: quality::Severity| findings.iter().filter(|f| f.severity == sev).count();
+    let persons = facts.order.len().max(1);
+    let weighted = count(quality::Severity::Error) * 5
+        + count(quality::Severity::Warning) * 2
+        + count(quality::Severity::Info);
+    let score = (100.0 - (weighted as f64 * 100.0 / (persons as f64 * 2.0)).min(100.0)).round();
+    let bookmarks = list_persons(store, &json!({"bookmarked": true, "limit": 8}))?;
+    let recent = list_persons(store, &json!({"sort": "recent", "limit": 6}))?;
+    Ok(json!({
+        "on_this_day": on_this_day, "upcoming": upcoming.into_iter().take(8).map(|x| x.1).collect::<Vec<_>>(),
+        "random": random, "quality": {"errors": count(quality::Severity::Error), "warnings": count(quality::Severity::Warning), "info": count(quality::Severity::Info), "score": score},
+        "bookmarks": bookmarks["items"], "recent": recent["items"]
+    }))
 }
 
 /// The single entry point. `cmd` is `area.verb`; `args` is a JSON object.
@@ -956,8 +1163,46 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                     format!("{} does not exist", p.display()),
                 ));
             }
+            if cmd == "project.create" && p.exists() {
+                return Err(ApiError::new(
+                    "exists",
+                    format!("{} already exists", p.display()),
+                ));
+            }
+            if cmd == "project.open" {
+                // best effort: a corrupt write must never be the only copy
+                let _ = rolling_backup(&p, 10);
+            }
             sess.store = Some(Store::open(&p)?);
             sess.path = Some(p);
+            Ok(status(sess))
+        }
+        "project.backup" => {
+            let target = PathBuf::from(req(&args, "path")?);
+            if target.exists() {
+                return Err(ApiError::new(
+                    "exists",
+                    format!("{} already exists", target.display()),
+                ));
+            }
+            sess.store()?.backup_to(&target)?;
+            Ok(json!({"path": target.display().to_string()}))
+        }
+        "project.restore" => {
+            // open a backup as a new working copy (the backup itself is never modified)
+            let (from, to) = (
+                PathBuf::from(req(&args, "from")?),
+                PathBuf::from(req(&args, "to")?),
+            );
+            if to.exists() {
+                return Err(ApiError::new(
+                    "exists",
+                    format!("{} already exists", to.display()),
+                ));
+            }
+            std::fs::copy(&from, &to).map_err(|e| ApiError::new("io", e.to_string()))?;
+            sess.store = Some(Store::open(&to)?);
+            sess.path = Some(to);
             Ok(status(sess))
         }
         "project.close" => {
@@ -1485,6 +1730,112 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                 Ok(())
             })?;
             Ok(json!({"ok": true}))
+        }
+        "note.add" => {
+            let (tt, tid) = (req(&args, "target_type")?, req(&args, "target_id")?);
+            let body = req(&args, "body")?;
+            let id = sess.store_mut()?.transact("Add note", |tx| {
+                let nid = new_id();
+                put(
+                    tx,
+                    "note",
+                    &nid,
+                    &[("body", body.clone().into()), ("inline", 0.into())],
+                )
+                .map_err(|e| StoreError::Other(e.message))?;
+                put(
+                    tx,
+                    "note_link",
+                    &new_id(),
+                    &[
+                        ("note_id", nid.clone().into()),
+                        ("target_type", tt.clone().into()),
+                        ("target_id", tid.clone().into()),
+                    ],
+                )
+                .map_err(|e| StoreError::Other(e.message))?;
+                Ok(nid)
+            })?;
+            Ok(json!({"id": id}))
+        }
+        "note.update" => {
+            let (id, body) = (req(&args, "id")?, req(&args, "body")?);
+            sess.store_mut()?.transact("Edit note", |tx| {
+                put(tx, "note", &id, &[("body", body.clone().into())])
+                    .map_err(|e| StoreError::Other(e.message))
+            })?;
+            Ok(json!({"ok": true}))
+        }
+        "note.remove" => {
+            // detach a note from its target; the note itself is deleted when nothing else uses it
+            let link_id = req(&args, "link_id")?;
+            sess.store_mut()?.transact("Remove note", |tx| {
+                let Some(l) = tx.get("note_link", &link_id)? else {
+                    return Ok(());
+                };
+                let note_id = rs(&l, "note_id");
+                tx.delete("note_link", &link_id)?;
+                if tx.ids_where("note_link", "note_id", &note_id)?.is_empty() {
+                    tx.delete("note", &note_id)?;
+                }
+                Ok(())
+            })?;
+            Ok(json!({"ok": true}))
+        }
+        "citation.add" => {
+            let (tt, tid) = (req(&args, "target_type")?, req(&args, "target_id")?);
+            let source_id = s(&args, "source_id");
+            let new_title = s(&args, "new_source_title");
+            let (page, quality) = (nullable(s(&args, "page")), nullable(s(&args, "quality")));
+            let id = sess.store_mut()?.transact("Add citation", |tx| {
+                let sid = match (source_id.clone(), new_title.clone()) {
+                    (Some(sid), _) => sid,
+                    (None, Some(title)) if !title.trim().is_empty() => {
+                        let sid = new_id();
+                        put(
+                            tx,
+                            "source",
+                            &sid,
+                            &[("title", title.trim().into()), ("inline", 0.into())],
+                        )
+                        .map_err(|e| StoreError::Other(e.message))?;
+                        sid
+                    }
+                    _ => {
+                        return Err(StoreError::Other(
+                            "a source or a new source title is required".into(),
+                        ))
+                    }
+                };
+                let cid = new_id();
+                put(
+                    tx,
+                    "citation",
+                    &cid,
+                    &[
+                        ("source_id", sid.into()),
+                        ("target_type", tt.clone().into()),
+                        ("target_id", tid.clone().into()),
+                        ("page", page.clone()),
+                        ("quality", quality.clone()),
+                    ],
+                )
+                .map_err(|e| StoreError::Other(e.message))?;
+                Ok(cid)
+            })?;
+            Ok(json!({"id": id}))
+        }
+        "dashboard.data" => dashboard(sess.store()?, &args),
+        "date.parse" => {
+            let text = req(&args, "text")?;
+            let loc = locale(sess.store()?);
+            Ok(match GenDate::parse(&text) {
+                Ok(d) => json!({"valid": true, "gedcom": d.to_gedcom(), "display": d.format(loc)}),
+                Err(_) if text.trim().is_empty() => {
+                    json!({"valid": true, "gedcom": "", "display": ""})
+                }
+                Err(e) => json!({"valid": false, "error": e.to_string()}),
+            })
         }
         "meta.event_types" => Ok(json!({
             "person": ["BIRT","CHR","BAPM","BARM","BASM","BLES","CHRA","CONF","FCOM","ORDN","ADOP","DEAT","BURI","CREM","PROB","WILL","NATU","EMIG","IMMI","CENS","GRAD","RETI","RESI","OCCU","EDUC","NATI","RELI","TITL","PROP","CAST","DSCR","IDNO","SSN","NCHI","FACT","EVEN"],

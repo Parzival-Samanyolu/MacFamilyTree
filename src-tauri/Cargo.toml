@@ -1,0 +1,17 @@
+[package]
+name = "kintree-desktop"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Tauri 2 desktop shell for KinTree"
+
+# Standalone workspace: building the desktop shell needs system WebView libraries that the core/app crates do not.
+[workspace]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+kintree-app = { path = "../app" }
+serde_json = "1"

@@ -1,0 +1,238 @@
+import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { base64ToBytes, bytesToBase64, call } from '../api/client'
+import type { ImportReport } from '../api/types'
+import { downloadBlob } from '../lib/format'
+import { act } from '../lib/query'
+import { useApp } from '../store/app'
+
+function ProjectFiles() {
+  const { t } = useTranslation()
+  const { status, toast, go } = useApp()
+  const [path, setPath] = useState('')
+  const run = async (cmd: string, label: string) => {
+    if (!path.trim()) return
+    const r = await act(cmd, { path: path.trim() })
+    if (r) {
+      toast(label)
+      if (cmd !== 'project.backup') go('dashboard')
+    }
+  }
+  return (
+    <section className="card p-4 lg:col-span-2">
+      <h2 className="mb-2 text-lg font-semibold">{t('project.title')}</h2>
+      <p className="mb-3 text-sm text-[var(--muted)]">{t('project.hint')}</p>
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-64 flex-1">
+          <label className="label" htmlFor="proj-path">
+            {t('project.path')}
+          </label>
+          <input
+            id="proj-path"
+            className="input"
+            value={path}
+            onChange={(e) => setPath(e.target.value)}
+            placeholder="/home/me/family.ktree"
+          />
+        </div>
+        <button
+          type="button"
+          className="btn"
+          disabled={!path.trim()}
+          onClick={() => run('project.open', t('project.opened'))}
+        >
+          {t('project.open')}
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={!path.trim()}
+          onClick={() => run('project.create', t('project.created'))}
+        >
+          {t('project.create')}
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={!path.trim() || !status.open}
+          onClick={() => run('project.backup', t('project.backedUp'))}
+        >
+          {t('project.backup')}
+        </button>
+      </div>
+    </section>
+  )
+}
+
+export function ImportExport() {
+  const { t } = useTranslation()
+  const { status, toast } = useApp()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [report, setReport] = useState<ImportReport | null>(null)
+  const [filter, setFilter] = useState<'all' | 'warning' | 'error' | 'info'>('all')
+  const [opt, setOpt] = useState({
+    version: '5.5.1',
+    charset: 'utf8',
+    living: 'include',
+    dialect: 'standard',
+    include_media: true,
+  })
+
+  const onFile = async (f: File | undefined) => {
+    if (!f) return
+    const bytes = new Uint8Array(await f.arrayBuffer())
+    const r = await act<{ report: ImportReport }>('gedcom.import', { data: bytesToBase64(bytes) })
+    if (r) {
+      setReport(r.report)
+      toast(t('import.done', { persons: r.report.persons, issues: r.report.issues.length }))
+    }
+    if (fileRef.current) fileRef.current.value = ''
+  }
+  const doExport = async () => {
+    try {
+      const r = await call<{ data: string; size: number }>('gedcom.export', opt)
+      downloadBlob('family-tree.ged', base64ToBytes(r.data) as BlobPart, 'text/plain')
+      toast(t('export.done', { size: Math.round(r.size / 1024) }))
+    } catch (e) {
+      toast(String((e as Error).message), 'error')
+    }
+  }
+  const issues = (report?.issues ?? []).filter((i) => filter === 'all' || i.severity === filter)
+  const sel = (k: keyof typeof opt, label: string, options: [string, string][]) => (
+    <div>
+      <label className="label" htmlFor={`ex-${k}`}>
+        {label}
+      </label>
+      <select
+        id={`ex-${k}`}
+        className="input"
+        value={String(opt[k])}
+        onChange={(e) => setOpt({ ...opt, [k]: e.target.value })}
+      >
+        {options.map(([v, l]) => (
+          <option key={v} value={v}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+  return (
+    <div className="mx-auto grid max-w-5xl gap-4 p-6 lg:grid-cols-2">
+      <section className="card p-4">
+        <h2 className="mb-2 text-lg font-semibold">{t('import.title')}</h2>
+        <p className="mb-3 text-sm text-[var(--muted)]">{t('import.hint')}</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".ged,.gedcom,text/plain"
+          aria-label={t('import.choose')}
+          className="input"
+          onChange={(e) => onFile(e.target.files?.[0])}
+          data-testid="import-file"
+        />
+        {report && (
+          <div className="mt-4" data-testid="import-report">
+            <div className="mb-2 flex flex-wrap gap-2 text-sm">
+              <span className="chip">GEDCOM {report.version}</span>
+              <span className="chip">{report.charset}</span>
+              <span className="chip">{t('status.persons', { count: report.persons })}</span>
+              <span className="chip">{t('status.families', { count: report.families })}</span>
+              <span className="chip">{t('import.events', { count: report.events })}</span>
+              <span className="chip">{t('import.preserved', { count: report.preserved_structures })}</span>
+            </div>
+            <div className="mb-2 flex items-center gap-2">
+              <label className="label !mb-0" htmlFor="issue-filter">
+                {t('import.show')}
+              </label>
+              <select
+                id="issue-filter"
+                className="input !w-auto"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as typeof filter)}
+              >
+                <option value="all">{t('import.all')}</option>
+                <option value="error">{t('import.errors')}</option>
+                <option value="warning">{t('import.warnings')}</option>
+                <option value="info">{t('import.infos')}</option>
+              </select>
+              <span className="text-sm text-[var(--muted)]">{t('import.issueCount', { count: issues.length })}</span>
+            </div>
+            <div className="max-h-72 overflow-auto rounded-lg border border-[var(--border)]">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-[var(--surface-2)] text-left">
+                  <tr>
+                    <th className="px-2 py-1">{t('import.line')}</th>
+                    <th className="px-2 py-1">{t('import.severity')}</th>
+                    <th className="px-2 py-1">{t('import.message')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {issues.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-2 py-2 text-[var(--muted)]">
+                        {t('import.clean')}
+                      </td>
+                    </tr>
+                  )}
+                  {issues.map((i, n) => (
+                    <tr key={n} className="border-t border-[var(--border)]">
+                      <td className="px-2 py-1 font-mono text-xs">{i.line || '–'}</td>
+                      <td
+                        className={`px-2 py-1 ${i.severity === 'error' ? 'text-[var(--danger)]' : i.severity === 'warning' ? 'text-[var(--warn)]' : ''}`}
+                      >
+                        {t(`import.sev.${i.severity}`)}
+                      </td>
+                      <td className="px-2 py-1">{i.message}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+      <section className="card p-4">
+        <h2 className="mb-2 text-lg font-semibold">{t('export.title')}</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {sel('version', t('export.version'), [
+            ['5.5.1', 'GEDCOM 5.5.1'],
+            ['7.0', 'GEDCOM 7.0'],
+          ])}
+          {sel('charset', t('export.charset'), [
+            ['utf8', 'UTF-8'],
+            ['utf16', 'UTF-16'],
+            ['latin1', 'ISO-8859-1'],
+            ['ascii', 'ASCII'],
+          ])}
+          {sel('living', t('export.living'), [
+            ['include', t('export.livingInclude')],
+            ['mask', t('export.livingMask')],
+            ['exclude', t('export.livingExclude')],
+          ])}
+          {sel('dialect', t('export.dialect'), [
+            ['standard', 'KinTree'],
+            ['ancestry', 'Ancestry'],
+            ['ftm', 'Family Tree Maker'],
+            ['rootsmagic', 'RootsMagic'],
+            ['legacy', 'Legacy'],
+            ['gramps', 'Gramps'],
+          ])}
+        </div>
+        <label className="mt-3 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={opt.include_media}
+            onChange={(e) => setOpt({ ...opt, include_media: e.target.checked })}
+          />
+          {t('export.media')}
+        </label>
+        <button type="button" className="btn btn-primary mt-4" disabled={!status.open} onClick={doExport}>
+          {t('export.button')}
+        </button>
+        <p className="mt-3 text-xs text-[var(--muted)]">{t('export.note')}</p>
+      </section>
+      <ProjectFiles />
+    </div>
+  )
+}

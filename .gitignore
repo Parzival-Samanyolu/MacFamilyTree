@@ -3,3 +3,9 @@ node_modules/
 dist/
 *.ktree
 .DS_Store
+ui/dist/
+ui/test-results/
+ui/playwright-report/
+src-tauri/target/
+src-tauri/gen/
+backups/

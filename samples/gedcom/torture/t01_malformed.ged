@@ -1,0 +1,28 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+stray text without level
+0 @I1@ INDI
+1 NAME  Broken   /Line/
+3 DEEP jumped level
+1 SEX Z
+1 FAMC @F99@
+1 FAMS @F1@
+
+
+0 @I2@ INDI
+1 NAME Child /Orphan/
+1 FAMC @F1@
+0 @I1@ INDI
+1 NAME Duplicate /Xref/
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I404@
+1 CHIL @I3@
+1 CHIL @I3@
+1 MARR
+2 DATE 31 FEB 1850
+2 PLAC ,,,
+0 @S9@ SOUR
+1 REPO @I1@
+0 TRLR

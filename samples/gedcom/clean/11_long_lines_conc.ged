@@ -1,0 +1,19 @@
+0 HEAD
+1 SOUR TESTGEN
+2 VERS 1.0
+2 NAME Test Generator
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME Long /Notes/
+1 NOTE This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read. This is a long note line that must be split with CONC when written and reassembled on read.
+2 CONT second paragraph
+2 CONT 
+2 CONT   indented after blank
+1 OCCU xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+0 TRLR

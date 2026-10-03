@@ -1,0 +1,38 @@
+0 HEAD
+1 SOUR Ancestry.com Family Trees
+2 VERS 1.0
+2 NAME Test Generator
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME Robert /Brown/
+2 GIVN Robert
+2 SURN Brown
+2 _MARNM Robert Brown Sr
+1 SEX M
+1 _UID 7F3A9C2E1B4D4E5F8A6B0C1D2E3F4A5B
+1 _APID 1,7602::12345
+1 BIRT
+2 DATE 4 JUL 1776
+2 PLAC Philadelphia, Pennsylvania, USA
+2 _FNA YES
+2 SOUR @S1@
+3 PAGE Ancestry.com record 99
+3 _APID 1,2442::99
+3 DATA
+4 TEXT Born at home, per family bible.
+5 CONC  Verified.
+1 _MILT Served in Continental Army
+2 DATE 1777
+0 @S1@ SOUR
+1 TITL U.S. Census 1790
+1 _APID 1,2442::0
+1 _TREE tree-id-0001
+0 _TODO Check records
+1 DESCR unknown tag at level zero
+0 TRLR

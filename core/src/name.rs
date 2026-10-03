@@ -79,8 +79,10 @@ impl PersonName {
 
     /// GEDCOM NAME value: `Given /Surname/ Suffix`.
     pub fn to_gedcom(&self) -> String {
-        let given = join(&[&self.prefix, &self.given]);
-        let mut s = given;
+        let mut s = join(&[&self.prefix, &self.given]);
+        if self.full_surname().is_empty() && self.suffix.is_empty() {
+            return s;
+        }
         s.push_str(&format!(" /{}/", self.full_surname()));
         if !self.suffix.is_empty() {
             s.push(' ');

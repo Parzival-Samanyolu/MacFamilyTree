@@ -1,0 +1,33 @@
+0 HEAD
+1 SOUR RootsMagic
+2 VERS 1.0
+2 NAME Test Generator
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME Tom /Ford/
+2 GIVN Tom
+2 SURN Ford
+1 SEX M
+1 REFN A-100
+1 RESN PRIVACY
+1 _UID AABBCCDD
+1 _FLGS
+2 _PRIM Y
+1 ASSO @I2@
+2 RELA Godfather
+2 NOTE Baptism witness.
+1 EVEN Custom value
+2 TYPE Graduation Honors
+0 @I2@ INDI
+1 NAME Sam /Hill/
+1 SEX M
+1 EVEN
+2 TYPE Gramps event
+2 _GRAMPS_ID E0001
+0 TRLR

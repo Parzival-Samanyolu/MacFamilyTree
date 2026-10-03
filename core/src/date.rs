@@ -69,6 +69,9 @@ pub struct GenDate {
     pub b: Option<Part>,
     /// Free-text fallback ("in the reign of Victoria"). When set with no `a`, the date is a pure phrase.
     pub phrase: Option<String>,
+    /// Phrase came from unparseable source text and is written back without parentheses.
+    #[serde(default)]
+    pub verbatim: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -609,6 +612,7 @@ impl GenDate {
             a: Some(p),
             b: None,
             phrase: None,
+            verbatim: false,
         }
     }
     pub fn phrase(text: &str) -> GenDate {
@@ -618,6 +622,7 @@ impl GenDate {
             a: None,
             b: None,
             phrase: Some(text.to_string()),
+            verbatim: false,
         }
     }
 
@@ -636,6 +641,18 @@ impl GenDate {
         let mut take_cal = |toks: &mut Vec<String>| {
             let mut i = 0;
             while i < toks.len() {
+                let bare = match toks[i].as_str() {
+                    "GREGORIAN" => Some(Calendar::Gregorian),
+                    "JULIAN" => Some(Calendar::Julian),
+                    "HEBREW" => Some(Calendar::Hebrew),
+                    "FRENCH_R" => Some(Calendar::French),
+                    _ => None,
+                };
+                if let Some(c) = bare {
+                    cal = c;
+                    toks.remove(i);
+                    continue;
+                }
                 if toks[i].starts_with("@#") {
                     // escape may contain a space ("@#DFRENCH R@")
                     let mut esc = toks[i].clone();
@@ -668,6 +685,7 @@ impl GenDate {
                 a: Some(p),
                 b: None,
                 phrase: None,
+                verbatim: false,
             })
         };
         match kw.as_str() {
@@ -692,6 +710,7 @@ impl GenDate {
                     a: Some(a),
                     b: Some(b),
                     phrase: None,
+                    verbatim: false,
                 })
             }
             "FROM" => {
@@ -705,6 +724,7 @@ impl GenDate {
                         a: Some(a),
                         b: Some(b),
                         phrase: None,
+                        verbatim: false,
                     })
                 } else {
                     simple(Qualifier::From, rest)
@@ -721,7 +741,11 @@ impl GenDate {
         if s.is_empty() {
             return None;
         }
-        Some(Self::parse(s).unwrap_or_else(|_| GenDate::phrase(s)))
+        Some(Self::parse(s).unwrap_or_else(|_| {
+            let mut d = GenDate::phrase(s);
+            d.verbatim = true;
+            d
+        }))
     }
 
     /// Earliest and latest JDN covered, if the date is not a pure phrase.
@@ -767,9 +791,20 @@ impl GenDate {
 
     // ---------- formatting ----------
 
-    fn fmt_part_gedcom(&self, p: &Part) -> String {
+    fn fmt_part_gedcom(&self, p: &Part, v7: bool) -> String {
         let table = month_table(self.calendar);
         let mut out = String::new();
+        if v7 {
+            out.push_str(match self.calendar {
+                Calendar::Julian => "JULIAN ",
+                Calendar::Hebrew => "HEBREW ",
+                Calendar::French => "FRENCH_R ",
+                _ => "",
+            });
+        } else if let Some(e) = self.calendar.gedcom_escape() {
+            out.push_str(e);
+            out.push(' ');
+        }
         if let Some(d) = p.day {
             out.push_str(&d.to_string());
             out.push(' ');
@@ -785,9 +820,35 @@ impl GenDate {
         out
     }
 
+    /// GEDCOM 7.0 form: calendar names instead of `@#D…@` escapes (Hijri has no 7.0 name and is converted to Gregorian).
+    pub fn to_gedcom7(&self) -> String {
+        if self.calendar == Calendar::Hijri {
+            let conv = |p: &Part| {
+                let (y, m, d) = jdn_to_gregorian(p.span(Calendar::Hijri).0);
+                Part {
+                    year: y,
+                    month: p.month.map(|_| m),
+                    day: p.day.map(|_| d),
+                    dual_year: None,
+                }
+            };
+            let mut g = self.clone();
+            g.calendar = Calendar::Gregorian;
+            g.a = self.a.as_ref().map(conv);
+            g.b = self.b.as_ref().map(conv);
+            return g.gedcom_inner(true);
+        }
+        self.gedcom_inner(true)
+    }
+
     pub fn to_gedcom(&self) -> String {
+        self.gedcom_inner(false)
+    }
+
+    fn gedcom_inner(&self, v7: bool) -> String {
         if self.a.is_none() {
             return match &self.phrase {
+                Some(p) if self.verbatim => p.clone(),
                 Some(p) => format!("({})", p),
                 None => String::new(),
             };
@@ -795,10 +856,6 @@ impl GenDate {
         let a = self.a.as_ref().unwrap();
         let body = |q: &str, parts: Vec<String>| -> String {
             let mut s = String::new();
-            if let Some(e) = self.calendar.gedcom_escape() {
-                s.push_str(e);
-                s.push(' ');
-            }
             if !q.is_empty() {
                 s.push_str(q);
                 s.push(' ');
@@ -806,7 +863,7 @@ impl GenDate {
             s.push_str(&parts.join(" "));
             s
         };
-        let fa = self.fmt_part_gedcom(a);
+        let fa = self.fmt_part_gedcom(a, v7);
         match self.qualifier {
             Qualifier::Exact => body("", vec![fa]),
             Qualifier::About => body("ABT", vec![fa]),
@@ -820,7 +877,7 @@ impl GenDate {
                 let fb = self
                     .b
                     .as_ref()
-                    .map(|b| self.fmt_part_gedcom(b))
+                    .map(|b| self.fmt_part_gedcom(b, v7))
                     .unwrap_or_default();
                 body("BET", vec![fa, "AND".into(), fb])
             }
@@ -828,7 +885,7 @@ impl GenDate {
                 let fb = self
                     .b
                     .as_ref()
-                    .map(|b| self.fmt_part_gedcom(b))
+                    .map(|b| self.fmt_part_gedcom(b, v7))
                     .unwrap_or_default();
                 body("FROM", vec![fa, "TO".into(), fb])
             }
@@ -1082,5 +1139,28 @@ mod tests {
             ),
             Some(50)
         );
+    }
+}
+
+#[cfg(test)]
+mod v7_tests {
+    use super::*;
+
+    #[test]
+    fn gedcom7_calendar_names_roundtrip() {
+        for (src, v7) in [
+            ("@#DJULIAN@ 5 OCT 1582", "JULIAN 5 OCT 1582"),
+            (
+                "BET @#DJULIAN@ 1 JAN 1700 AND @#DJULIAN@ 1 FEB 1700",
+                "BET JULIAN 1 JAN 1700 AND JULIAN 1 FEB 1700",
+            ),
+            ("@#DHEBREW@ 1 TSH 5785", "HEBREW 1 TSH 5785"),
+            ("3 MAR 1850", "3 MAR 1850"),
+        ] {
+            let d = GenDate::parse(src).unwrap();
+            assert_eq!(d.to_gedcom7(), v7);
+            let back = GenDate::parse(v7).unwrap();
+            assert_eq!(back.to_gedcom(), src);
+        }
     }
 }

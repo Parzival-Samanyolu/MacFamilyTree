@@ -1,0 +1,32 @@
+0 HEAD
+1 SOUR TESTGEN
+2 VERS 1.0
+2 NAME Test Generator
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME Photo /Person/
+1 OBJE @O1@
+1 OBJE
+2 FILE inline/portrait.jpg
+3 FORM jpeg
+3 TITL Inline portrait
+1 SOUR Inline source text
+2 PAGE page 3
+1 BIRT
+2 SOUR @S1@
+3 NOTE Citation note
+0 @O1@ OBJE
+1 FILE photos/family.jpg
+2 FORM jpeg
+2 TITL Family photo
+0 @S1@ SOUR
+1 TITL Birth Certificate
+1 TEXT Full transcription
+2 CONT of the certificate.
+0 TRLR

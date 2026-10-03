@@ -86,6 +86,7 @@ pub struct Tx<'a> {
     conn: &'a Connection,
     columns: &'a HashMap<&'static str, Vec<String>>,
     ops: Vec<Op>,
+    track: bool,
 }
 
 fn table_name(t: &str) -> Result<&'static str> {
@@ -183,12 +184,14 @@ impl<'a> Tx<'a> {
             after.insert(k, v);
         }
         write_row(self.conn, t, &after)?;
-        self.ops.push(Op {
-            table: t,
-            id: id.clone(),
-            before,
-            after: Some(after),
-        });
+        if self.track {
+            self.ops.push(Op {
+                table: t,
+                id: id.clone(),
+                before,
+                after: Some(after),
+            });
+        }
         Ok(id)
     }
 
@@ -214,12 +217,14 @@ impl<'a> Tx<'a> {
         };
         self.conn
             .execute(&format!("DELETE FROM {} WHERE id = ?1", t), [id])?;
-        self.ops.push(Op {
-            table: t,
-            id: id.to_string(),
-            before: Some(before),
-            after: None,
-        });
+        if self.track {
+            self.ops.push(Op {
+                table: t,
+                id: id.to_string(),
+                before: Some(before),
+                after: None,
+            });
+        }
         Ok(true)
     }
 
@@ -229,9 +234,10 @@ impl<'a> Tx<'a> {
         if !self.columns[t].iter().any(|c| c == col) {
             return Err(StoreError::Other(format!("no column {}.{}", t, col)));
         }
-        let mut st = self
-            .conn
-            .prepare(&format!("SELECT id FROM {} WHERE {} = ?1", t, col))?;
+        let mut st = self.conn.prepare(&format!(
+            "SELECT id FROM {} WHERE {} = ?1 ORDER BY rowid",
+            t, col
+        ))?;
         let ids = st
             .query_map([value], |r| r.get::<_, String>(0))?
             .collect::<std::result::Result<Vec<_>, _>>()?;
@@ -298,6 +304,7 @@ impl Store {
             conn: &self.conn,
             columns: &self.columns,
             ops: Vec::new(),
+            track: true,
         };
         let out = f(&mut tx);
         let ops = std::mem::take(&mut tx.ops);
@@ -600,6 +607,61 @@ impl Store {
             })?
             .collect::<std::result::Result<Vec<_>, _>>()?;
         Ok(ids)
+    }
+
+    /// Run `f` without recording history (bulk import into a fresh project). Clears history and rebuilds the search index.
+    pub fn transact_untracked<T>(&mut self, f: impl FnOnce(&mut Tx) -> Result<T>) -> Result<T> {
+        self.conn.execute_batch("BEGIN IMMEDIATE")?;
+        let mut tx = Tx {
+            conn: &self.conn,
+            columns: &self.columns,
+            ops: Vec::new(),
+            track: false,
+        };
+        let out = f(&mut tx);
+        match out {
+            Err(e) => {
+                self.conn.execute_batch("ROLLBACK")?;
+                Err(e)
+            }
+            Ok(v) => {
+                self.conn
+                    .execute_batch("DELETE FROM history_ops; DELETE FROM history;")?;
+                self.conn.execute_batch("COMMIT")?;
+                self.reindex_all()?;
+                Ok(v)
+            }
+        }
+    }
+
+    pub fn reindex_all(&self) -> Result<()> {
+        self.conn.execute("DELETE FROM search_index", [])?;
+        let mut st = self.conn.prepare("SELECT id FROM person ORDER BY rowid")?;
+        let ids = st
+            .query_map([], |r| r.get::<_, String>(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        for id in ids {
+            self.reindex_person(&id)?;
+        }
+        Ok(())
+    }
+
+    /// All rows of a table in insertion order.
+    pub fn rows(&self, table: &str) -> Result<Vec<Row>> {
+        let t = table_name(table)?;
+        let cols = &self.columns[t];
+        let sql = format!("SELECT id FROM {} ORDER BY rowid", t);
+        let mut st = self.conn.prepare(&sql)?;
+        let ids = st
+            .query_map([], |r| r.get::<_, String>(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        let mut out = Vec::with_capacity(ids.len());
+        for id in ids {
+            if let Some(r) = read_row(&self.conn, t, cols, &id)? {
+                out.push(r);
+            }
+        }
+        Ok(out)
     }
 
     pub fn count(&self, table: &str) -> Result<i64> {

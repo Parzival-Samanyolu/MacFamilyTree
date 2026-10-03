@@ -54,6 +54,7 @@ pub struct EventRec {
     pub owner_id: String,
     pub kind: String,
     pub custom_kind: Option<String>,
+    pub value: Option<String>,
     pub date_json: Option<String>,
     pub date_sort: Option<i64>,
     pub date_sort_end: Option<i64>,
@@ -211,4 +212,56 @@ impl<'a> Tx<'a> {
         self.delete("person", id)?;
         Ok(())
     }
+}
+
+/// Persons considered living under the privacy rule.
+///
+/// A manual override wins. Otherwise a person with a death/burial/cremation event is not living; a person with a
+/// known birth/christening year is living iff born within `years` of `current_year`; a person with neither is
+/// treated as living (privacy-safe default).
+pub fn living_ids(
+    store: &crate::store::Store,
+    years: i32,
+    current_year: i32,
+) -> Result<std::collections::HashSet<String>> {
+    use std::collections::{HashMap, HashSet};
+    let mut dead: HashSet<String> = HashSet::new();
+    let mut birth_year: HashMap<String, i32> = HashMap::new();
+    for e in store.rows("event")? {
+        if e["owner_type"] != "person" {
+            continue;
+        }
+        let owner = e["owner_id"].as_str().unwrap_or("").to_string();
+        match e["kind"].as_str().unwrap_or("") {
+            "DEAT" | "BURI" | "CREM" => {
+                dead.insert(owner);
+            }
+            "BIRT" | "CHR" | "BAPM" => {
+                if let Some(k) = e["date_sort"].as_i64() {
+                    let y = crate::date::jdn_to_gregorian(k).0;
+                    birth_year
+                        .entry(owner)
+                        .and_modify(|b| *b = (*b).min(y))
+                        .or_insert(y);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut out = HashSet::new();
+    for p in store.rows("person")? {
+        let id = p["id"].as_str().unwrap_or("").to_string();
+        let living = match p["living_override"].as_i64() {
+            Some(v) => v != 0,
+            None if dead.contains(&id) => false,
+            None => birth_year
+                .get(&id)
+                .map(|y| *y > current_year - years)
+                .unwrap_or(true),
+        };
+        if living {
+            out.insert(id);
+        }
+    }
+    Ok(out)
 }

@@ -1,0 +1,61 @@
+0 HEAD
+1 SOUR TESTGEN
+2 VERS 1.0
+2 NAME Test Generator
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME Henry /Tudor/
+1 SEX M
+1 FAMS @F1@
+1 FAMS @F2@
+0 @I2@ INDI
+1 NAME Catherine /Aragon/
+1 SEX F
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Anne /Boleyn/
+1 SEX F
+1 FAMS @F2@
+0 @I4@ INDI
+1 NAME Mary /Tudor/
+1 SEX F
+1 FAMC @F1@
+0 @I5@ INDI
+1 NAME Elizabeth /Tudor/
+1 SEX F
+1 FAMC @F2@
+2 PEDI birth
+0 @I6@ INDI
+1 NAME Ward /Fostered/
+1 SEX M
+1 FAMC @F2@
+2 PEDI foster
+0 @I7@ INDI
+1 NAME Child /Adopted/
+1 SEX U
+1 FAMC @F1@
+2 PEDI adopted
+2 STAT proven
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I4@
+1 CHIL @I7@
+1 MARR
+2 DATE 11 JUN 1509
+1 DIV
+2 DATE 23 MAY 1533
+0 @F2@ FAM
+1 HUSB @I1@
+1 WIFE @I3@
+1 CHIL @I5@
+1 CHIL @I6@
+1 MARR
+2 DATE 25 JAN 1533
+0 TRLR

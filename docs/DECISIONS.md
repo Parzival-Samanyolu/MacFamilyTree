@@ -15,3 +15,7 @@
 | 11 | French Republican calendar uses the historical sextile years III, VII, XI, and the arithmetic rule from year XV. | Matches real 1792–1805 records (e.g. 18 Brumaire VIII = 9 Nov 1799). |
 | 12 | Hijri uses the tabular civil calendar; may differ by ±1 day from observed (Umm al-Qura) dates. | No offline observational data; documented limitation. |
 | 13 | Years are historical-signed (-44 = 44 BC, no year 0); conversion to astronomical happens only in JDN math. | Matches GEDCOM `BC` semantics. |
+| 14 | Living rule: manual override wins; death/burial/cremation event → not living; known birth year → living iff within 110 years; no data → living (privacy-safe). Supersedes #10. | Safer default for exports. |
+| 15 | GEDCOM export always renumbers nothing: original xrefs are stored and reused so pointers inside preserved raw structures stay valid. | Lossless vendor-extension round trip. |
+| 16 | `MAP` coordinates live on the shared place; each event remembers whether its source `PLAC` had a `MAP` (`plac_map`). | Tag-level lossless without duplicating places. |
+| 17 | Dialect option currently changes only the header SOUR identification. Vendor-specific data is preserved verbatim rather than translated. | Honest scope; translation tables are backlog. |

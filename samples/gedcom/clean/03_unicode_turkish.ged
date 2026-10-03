@@ -1,0 +1,33 @@
+0 HEAD
+1 SOUR TESTGEN
+2 VERS 1.0
+2 NAME Test Generator
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @U1@
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME İsmail Çağrı /Işık/
+2 GIVN İsmail Çağrı
+2 SURN Işık
+1 SEX M
+1 BIRT
+2 DATE 15 NIS 1900
+2 PLAC Şanlıurfa, Türkiye
+1 NAME Ayşe /Öztürk/
+2 TYPE married
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Gülşen /Yıldız/
+1 SEX F
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 1925
+2 NOTE Düğün: “büyük” — 日本語 😀
+0 TRLR

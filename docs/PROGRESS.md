@@ -18,6 +18,13 @@
   Mask/Exclude, dialect header), import report with line-numbered issues.
   Corpus: 15 clean files (tag-for-tag lossless, re-export byte-identical) + 5 torture files (idempotent).
 
+- **Phase 1/9 logic (core)** — `relationship` (blood/in-law/step relations incl. pedigree collapse, multiple routes, inbreeding &
+  relatedness coefficients, Ahnentafel, d'Aboville, Henry, cycle detection), `kinship_terms` (EN, TR, DE, ES, FR, RU, AR;
+  Turkish amca/dayı/hala/teyze/yenge/enişte/bacanak/elti/baldız/kayınpeder…), `quality` (21 plausibility rules, severities,
+  ignore list, auto-fixes with undo), `duplicates` (blocked scoring, not-a-duplicate memory, person/family merge with full
+  rewiring, single undo step), `stats` (all listed statistics with drill-down ids), `synth` generator.
+  Undo now restores rows to their exact original position (rowid carried in history images).
+
 ## In progress / next
 - Phase 1 remainder: place engine, relationship engine, living-person rule, Double Metaphone + Daitch–Mokotoff,
   coverage measurement (target ≥ 90%), remaining typed records (sources, citations, media, notes, tasks…).

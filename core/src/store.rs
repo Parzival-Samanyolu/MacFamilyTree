@@ -108,22 +108,19 @@ fn value_ref(v: ValueRef) -> Value {
 }
 
 fn read_row(conn: &Connection, table: &str, cols: &[String], id: &str) -> Result<Option<Row>> {
-    let sql = format!("SELECT {} FROM {} WHERE id = ?1", cols.join(","), table);
+    // `_rowid` is carried in row images so undo/redo restores a row to its exact original position.
+    let sql = format!(
+        "SELECT rowid, {} FROM {} WHERE id = ?1",
+        cols.join(","),
+        table
+    );
     Ok(conn
         .prepare_cached(&sql)?
         .query_row([id], |r| {
             let mut m = Row::new();
+            m.insert("_rowid".into(), value_ref(r.get_ref(0)?));
             for (i, c) in cols.iter().enumerate() {
-                m.insert(
-                    c.clone(),
-                    match r.get_ref(i)? {
-                        ValueRef::Null => Value::Null,
-                        ValueRef::Integer(n) => Value::from(n),
-                        ValueRef::Real(f) => Value::from(f),
-                        ValueRef::Text(t) => Value::from(String::from_utf8_lossy(t).into_owned()),
-                        ValueRef::Blob(_) => Value::Null,
-                    },
-                );
+                m.insert(c.clone(), value_ref(r.get_ref(i + 1)?));
             }
             Ok(m)
         })
@@ -136,7 +133,11 @@ fn write_row(conn: &Connection, table: &str, row: &Row) -> Result<()> {
         "INSERT OR REPLACE INTO {} ({}) VALUES ({})",
         table,
         cols.iter()
-            .map(|c| c.as_str())
+            .map(|c| if c.as_str() == "_rowid" {
+                "rowid"
+            } else {
+                c.as_str()
+            })
             .collect::<Vec<_>>()
             .join(","),
         (1..=cols.len())
@@ -196,6 +197,9 @@ impl<'a> Tx<'a> {
             after.insert(k, v);
         }
         write_row(self.conn, t, &after)?;
+        if !after.contains_key("_rowid") {
+            after.insert("_rowid".into(), self.conn.last_insert_rowid().into());
+        }
         if self.track {
             self.ops.push(Op {
                 table: t,

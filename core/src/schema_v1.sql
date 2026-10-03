@@ -70,4 +70,5 @@ CREATE TABLE history_ops (
   history_id INTEGER NOT NULL, seq INTEGER NOT NULL, tbl TEXT NOT NULL, row_id TEXT NOT NULL, before_json TEXT, after_json TEXT,
   PRIMARY KEY (history_id, seq));
 
+CREATE TABLE search_map (fts_rowid INTEGER PRIMARY KEY AUTOINCREMENT, entity_id TEXT NOT NULL UNIQUE);
 CREATE VIRTUAL TABLE search_index USING fts5(entity_type UNINDEXED, entity_id UNINDEXED, body, tokenize = "unicode61 remove_diacritics 2");

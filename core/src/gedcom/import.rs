@@ -403,6 +403,9 @@ fn import_event(
             Some(node.value.clone())
         },
         place_id,
+        cause: caus,
+        agency: agnc,
+        plac_map: Some(had_map as i64),
         sort_order: order,
         ..Default::default()
     };
@@ -419,16 +422,6 @@ fn import_event(
         e.set_date(Some(&d));
     }
     tx.put("event", &e)?;
-    put(
-        tx,
-        "event",
-        &id,
-        &[
-            ("cause", opt(caus.as_deref())),
-            ("agency", opt(agnc.as_deref())),
-            ("plac_map", (had_map as i64).into()),
-        ],
-    )?;
     cx.rep.events += 1;
     common(cx, tx, node, &mut used, "event", &id)?;
     raw_rest(cx, tx, node, &used, "event", &id)

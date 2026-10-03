@@ -60,6 +60,9 @@ pub struct EventRec {
     pub date_sort_end: Option<i64>,
     pub place_id: Option<String>,
     pub description: Option<String>,
+    pub cause: Option<String>,
+    pub agency: Option<String>,
+    pub plac_map: Option<i64>,
     pub sort_order: i64,
 }
 

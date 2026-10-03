@@ -376,6 +376,12 @@ pub fn export(store: &Store, o: &ExportOptions) -> Result<Vec<u8>> {
 }
 
 pub fn export_text(store: &Store, o: &ExportOptions) -> Result<String> {
+    let t0 = std::time::Instant::now();
+    let tr = |m: &str| {
+        if std::env::var_os("KT_TRACE").is_some() {
+            eprintln!("  [export] {m}: {:?}", t0.elapsed());
+        }
+    };
     let mut raws: HashMap<String, Vec<Node>> = HashMap::new();
     let mut head_raw: Option<Node> = None;
     let mut record_raws: Vec<Node> = Vec::new();
@@ -423,6 +429,7 @@ pub fn export_text(store: &Store, o: &ExportOptions) -> Result<String> {
         }),
     };
 
+    tr("ctx built");
     let living: HashSet<String> = if o.living == LivingPolicy::Include {
         HashSet::new()
     } else {
@@ -500,6 +507,7 @@ pub fn export_text(store: &Store, o: &ExportOptions) -> Result<String> {
         fam_nodes.push(n);
     }
 
+    tr("families done");
     let mut indi_nodes = Vec::new();
     for p in &persons {
         let pid = sid(p);
@@ -563,6 +571,7 @@ pub fn export_text(store: &Store, o: &ExportOptions) -> Result<String> {
         indi_nodes.push(n);
     }
 
+    tr("indis done");
     // Records that stand alone (not inline) — skipped entirely when masking, since links were dropped.
     let mut other_nodes = Vec::new();
     if o.include_media {
@@ -638,6 +647,7 @@ pub fn export_text(store: &Store, o: &ExportOptions) -> Result<String> {
     out.extend(other_nodes);
     out.extend(record_raws);
     out.push(Node::new("TRLR", ""));
+    tr("nodes built");
     let opts = tree::WriteOpts {
         max_len: if o.version == Version::V70 { 0 } else { 248 },
     };

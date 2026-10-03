@@ -97,10 +97,21 @@ fn table_name(t: &str) -> Result<&'static str> {
         .ok_or_else(|| StoreError::UnknownTable(t.to_string()))
 }
 
+fn value_ref(v: ValueRef) -> Value {
+    match v {
+        ValueRef::Null => Value::Null,
+        ValueRef::Integer(n) => Value::from(n),
+        ValueRef::Real(f) => Value::from(f),
+        ValueRef::Text(t) => Value::from(String::from_utf8_lossy(t).into_owned()),
+        ValueRef::Blob(_) => Value::Null,
+    }
+}
+
 fn read_row(conn: &Connection, table: &str, cols: &[String], id: &str) -> Result<Option<Row>> {
     let sql = format!("SELECT {} FROM {} WHERE id = ?1", cols.join(","), table);
     Ok(conn
-        .query_row(&sql, [id], |r| {
+        .prepare_cached(&sql)?
+        .query_row([id], |r| {
             let mut m = Row::new();
             for (i, c) in cols.iter().enumerate() {
                 m.insert(
@@ -146,7 +157,8 @@ fn write_row(conn: &Connection, table: &str, row: &Row) -> Result<()> {
             other => rusqlite::types::Value::Text(other.to_string()),
         })
         .collect();
-    conn.execute(&sql, rusqlite::params_from_iter(vals))?;
+    conn.prepare_cached(&sql)?
+        .execute(rusqlite::params_from_iter(vals))?;
     Ok(())
 }
 
@@ -258,6 +270,7 @@ impl Store {
     }
 
     fn init(conn: Connection) -> Result<Store> {
+        conn.set_prepared_statement_cache_capacity(256);
         let v: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
         if v > MIGRATIONS.len() as i64 {
             return Err(StoreError::TooNew {
@@ -543,20 +556,38 @@ impl Store {
     }
 
     pub fn reindex_person(&self, id: &str) -> Result<()> {
-        self.conn.execute(
-            "DELETE FROM search_index WHERE entity_type = 'person' AND entity_id = ?1",
-            [id],
-        )?;
+        let rid: Option<i64> = self
+            .conn
+            .query_row(
+                "SELECT fts_rowid FROM search_map WHERE entity_id = ?1",
+                [id],
+                |r| r.get(0),
+            )
+            .optional()?;
+        if let Some(r) = rid {
+            self.conn
+                .execute("DELETE FROM search_index WHERE rowid = ?1", [r])?;
+        }
         let exists: bool = self
             .conn
             .query_row("SELECT 1 FROM person WHERE id = ?1", [id], |_| Ok(()))
             .optional()?
             .is_some();
         if !exists {
+            self.conn
+                .execute("DELETE FROM search_map WHERE entity_id = ?1", [id])?;
             return Ok(());
         }
+        let rid = match rid {
+            Some(r) => r,
+            None => {
+                self.conn
+                    .execute("INSERT INTO search_map (entity_id) VALUES (?1)", [id])?;
+                self.conn.last_insert_rowid()
+            }
+        };
         let mut text = String::new();
-        let mut st = self.conn.prepare(
+        let mut st = self.conn.prepare_cached(
             "SELECT prefix, given, nickname, surname_prefix, surname, suffix FROM person_name WHERE person_id = ?1",
         )?;
         let names = st.query_map([id], |r| {
@@ -568,7 +599,7 @@ impl Store {
             text.push_str(&n?.join(" "));
             text.push(' ');
         }
-        let mut st = self.conn.prepare(
+        let mut st = self.conn.prepare_cached(
             "SELECT e.kind, e.description, p.name FROM event e LEFT JOIN place p ON p.id = e.place_id WHERE e.owner_type='person' AND e.owner_id = ?1",
         )?;
         let evs = st.query_map([id], |r| {
@@ -581,8 +612,8 @@ impl Store {
             }
         }
         self.conn.execute(
-            "INSERT INTO search_index (entity_type, entity_id, body) VALUES ('person', ?1, ?2)",
-            params![id, crate::name::fold(&text)],
+            "INSERT INTO search_index (rowid, entity_type, entity_id, body) VALUES (?1, 'person', ?2, ?3)",
+            params![rid, id, crate::name::fold(&text)],
         )?;
         Ok(())
     }
@@ -636,6 +667,7 @@ impl Store {
 
     pub fn reindex_all(&self) -> Result<()> {
         self.conn.execute("DELETE FROM search_index", [])?;
+        self.conn.execute("DELETE FROM search_map", [])?;
         let mut st = self.conn.prepare("SELECT id FROM person ORDER BY rowid")?;
         let ids = st
             .query_map([], |r| r.get::<_, String>(0))?
@@ -646,21 +678,21 @@ impl Store {
         Ok(())
     }
 
-    /// All rows of a table in insertion order.
+    /// All rows of a table in insertion order (single query).
     pub fn rows(&self, table: &str) -> Result<Vec<Row>> {
         let t = table_name(table)?;
         let cols = &self.columns[t];
-        let sql = format!("SELECT id FROM {} ORDER BY rowid", t);
+        let sql = format!("SELECT {} FROM {} ORDER BY rowid", cols.join(","), t);
         let mut st = self.conn.prepare(&sql)?;
-        let ids = st
-            .query_map([], |r| r.get::<_, String>(0))?
+        let out = st
+            .query_map([], |r| {
+                let mut m = Row::new();
+                for (i, c) in cols.iter().enumerate() {
+                    m.insert(c.clone(), value_ref(r.get_ref(i)?));
+                }
+                Ok(m)
+            })?
             .collect::<std::result::Result<Vec<_>, _>>()?;
-        let mut out = Vec::with_capacity(ids.len());
-        for id in ids {
-            if let Some(r) = read_row(&self.conn, t, cols, &id)? {
-                out.push(r);
-            }
-        }
         Ok(out)
     }
 

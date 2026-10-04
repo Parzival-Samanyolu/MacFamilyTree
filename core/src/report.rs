@@ -876,6 +876,92 @@ fn unavailable(o: &Options) -> Document {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Numbering {
+    Ahnentafel,
+    DAboville,
+    Henry,
+}
+
+/// Numbered ancestor or descendant list (Ahnentafel, d'Aboville, Henry) as a table; living people follow the privacy mode.
+pub fn numbered_report(
+    store: &Store,
+    root: &str,
+    o: &Options,
+    system: Numbering,
+) -> Result<Document> {
+    use crate::relationship::{ahnentafel, number_descendants, DescendantNumbering};
+    let b = Builder::new(store, o)?;
+    if !b.f.persons.contains_key(root) || b.hidden(root) {
+        return Ok(unavailable(o));
+    }
+    let rows: Vec<(String, String)> = match system {
+        Numbering::Ahnentafel => ahnentafel(&b.f.graph, root, o.generations.saturating_sub(1))
+            .into_iter()
+            .map(|(n, id)| (n.to_string(), id))
+            .collect(),
+        Numbering::DAboville => number_descendants(
+            &b.f.graph,
+            &b.births,
+            root,
+            o.generations,
+            DescendantNumbering::DAboville,
+        ),
+        Numbering::Henry => number_descendants(
+            &b.f.graph,
+            &b.births,
+            root,
+            o.generations,
+            DescendantNumbering::Henry,
+        ),
+    };
+    let header = vec![
+        tr(o, "No.", "No.").to_string(),
+        tr(o, "Name", "Ad").to_string(),
+        tr(o, "Born", "Doğum").to_string(),
+        tr(o, "Died", "Ölüm").to_string(),
+    ];
+    let year = |e: Option<&EventFact>| {
+        e.and_then(|e| e.start)
+            .map(|k| crate::date::jdn_to_gregorian(k).0.to_string())
+            .unwrap_or_default()
+    };
+    let mut table = vec![];
+    for (n, id) in rows {
+        if b.hidden(&id) {
+            continue;
+        }
+        let masked = b.masked(&id);
+        table.push(vec![
+            n,
+            b.name(&id),
+            if masked {
+                String::new()
+            } else {
+                year(b.f.birth(&id))
+            },
+            if masked {
+                String::new()
+            } else {
+                year(b.f.death(&id))
+            },
+        ]);
+    }
+    let (en, trk) = match system {
+        Numbering::Ahnentafel => ("Ahnentafel of", "Ahnentafel:"),
+        Numbering::DAboville => ("d'Aboville descendants of", "d'Aboville soyağacı:"),
+        Numbering::Henry => ("Henry descendants of", "Henry soyağacı:"),
+    };
+    let title = format!("{} {}", tr(o, en, trk), b.name(root));
+    Ok(b.finish(
+        title,
+        vec![Block::Table {
+            header,
+            rows: table,
+        }],
+    ))
+}
+
 pub fn ancestor_report(store: &Store, root: &str, o: &Options) -> Result<Document> {
     let mut b = Builder::new(store, o)?;
     if !b.f.persons.contains_key(root) || b.hidden(root) {

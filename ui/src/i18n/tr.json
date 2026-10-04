@@ -240,7 +240,8 @@
     "media": "Ortam",
     "virtual": "Sanal ağaç",
     "stories": "Hikâyeler",
-    "replace": "Bul ve değiştir"
+    "replace": "Bul ve değiştir",
+    "advsearch": "Gelişmiş arama"
   },
   "notes": {
     "add": "Not ekle",
@@ -538,7 +539,10 @@
       "descendants": "Torun raporu",
       "family": "Aile grubu çizelgesi",
       "book": "Aile kitabı (atalar + torunlar)",
-      "bibliography": "Kaynakça"
+      "bibliography": "Kaynakça",
+      "ahnentafel": "Ahnentafel (numaralı atalar)",
+      "daboville": "d'Aboville (numaralı torunlar)",
+      "henry": "Henry (numaralı torunlar)"
     }
   },
   "timeline": {
@@ -845,6 +849,39 @@
       "source_title": "Kaynak başlığı",
       "source_author": "Kaynak yazarı",
       "citation_page": "Atıf sayfası"
+    }
+  },
+  "advsearch": {
+    "any": "Hepsi",
+    "yes": "Evet",
+    "no": "Hayır",
+    "phonetic": "Benzer sesli (soyadı)",
+    "bornFrom": "Doğum yılı başlangıç",
+    "bornTo": "Doğum yılı bitiş",
+    "diedFrom": "Ölüm yılı başlangıç",
+    "diedTo": "Ölüm yılı bitiş",
+    "status": "Durum",
+    "living": "Yaşayan",
+    "deceased": "Vefat etmiş",
+    "place": "Yer (herhangi bir olay)",
+    "eventKind": "Olayı var",
+    "eventText": "Olay metni (ör. meslek)",
+    "search": "Ara",
+    "clear": "Temizle",
+    "saveAs": "Bu aramayı adlandır",
+    "save": "Aramayı kaydet",
+    "saved": "“{{name}}” kaydedildi.",
+    "savedSearches": "Kayıtlı aramalar",
+    "noSaved": "Kayıtlı arama yok.",
+    "deleteSaved": "{{name}} kayıtlı aramasını sil",
+    "results": "{{count}} kişi",
+    "filters": "({{count}} süzgeç)",
+    "flags": {
+      "has_media": "Ortamı var",
+      "has_sources": "Kaynağı var",
+      "has_parents": "Ebeveyni kayıtlı",
+      "has_children": "Çocuğu kayıtlı",
+      "bookmarked": "Favori"
     }
   }
 }

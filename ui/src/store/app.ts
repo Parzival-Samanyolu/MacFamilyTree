@@ -4,6 +4,7 @@ import type { Status } from '../api/types'
 export type View =
   | 'dashboard'
   | 'persons'
+  | 'advsearch'
   | 'tree'
   | 'fan'
   | 'timeline'

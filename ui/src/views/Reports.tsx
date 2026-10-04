@@ -22,7 +22,9 @@ interface Tpl {
   value: string | null
 }
 
-type Kind = 'individual' | 'ancestors' | 'descendants' | 'book' | 'family' | 'bibliography'
+type Kind =
+  'individual' | 'ancestors' | 'descendants' | 'book' | 'family' | 'bibliography' | 'ahnentafel' | 'daboville' | 'henry'
+const NUMBERED: Kind[] = ['ahnentafel', 'daboville', 'henry']
 
 function Templates({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation()
@@ -112,7 +114,19 @@ export function Reports() {
               {t('reports.kind')}
             </label>
             <select id="rp-kind" className="input" value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
-              {(['individual', 'ancestors', 'descendants', 'family', 'book', 'bibliography'] as Kind[]).map((k) => (
+              {(
+                [
+                  'individual',
+                  'ancestors',
+                  'descendants',
+                  'family',
+                  'book',
+                  'ahnentafel',
+                  'daboville',
+                  'henry',
+                  'bibliography',
+                ] as Kind[]
+              ).map((k) => (
                 <option key={k} value={k}>
                   {t(`reports.type.${k}`)}
                 </option>
@@ -140,7 +154,7 @@ export function Reports() {
               </select>
             </div>
           )}
-          {(kind === 'ancestors' || kind === 'descendants' || kind === 'book') && (
+          {(kind === 'ancestors' || kind === 'descendants' || kind === 'book' || NUMBERED.includes(kind)) && (
             <div>
               <label className="label" htmlFor="rp-gen">
                 {t('reports.generations', { n: generations })}

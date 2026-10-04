@@ -11,6 +11,7 @@ import { PersonChip } from './PersonChip'
 export const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
   { view: 'dashboard', icon: 'home', key: 'nav.dashboard' },
   { view: 'persons', icon: 'people', key: 'nav.persons' },
+  { view: 'advsearch', icon: 'search', key: 'nav.advsearch' },
   { view: 'tree', icon: 'tree', key: 'nav.tree' },
   { view: 'virtual', icon: 'cube', key: 'nav.virtual' },
   { view: 'fan', icon: 'fan', key: 'nav.fan' },

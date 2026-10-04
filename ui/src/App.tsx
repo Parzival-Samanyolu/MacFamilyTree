@@ -18,6 +18,7 @@ import { TreeView } from './views/TreeView'
 import { CalendarView } from './views/Calendar'
 import { Library } from './views/Library'
 import { Reports } from './views/Reports'
+import { AdvancedSearch } from './views/AdvancedSearch'
 import { FindReplace } from './views/FindReplace'
 import { Stories } from './views/Stories'
 import { Timeline } from './views/Timeline'
@@ -46,6 +47,8 @@ function RouterInner() {
   switch (view) {
     case 'persons':
       return <Persons />
+    case 'advsearch':
+      return <AdvancedSearch />
     case 'tree':
       return <TreeView />
     case 'fan':

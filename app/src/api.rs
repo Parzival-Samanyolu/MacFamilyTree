@@ -14,6 +14,7 @@ use kintree_core::name::{suggest_child_surname, NamingCulture, PersonName, Sex a
 use kintree_core::pkg;
 use kintree_core::places;
 use kintree_core::quality::{self, Rules};
+use kintree_core::query;
 use kintree_core::relationship::{
     ahnentafel, birth_keys, blood_relations, number_descendants, relationship, DescendantNumbering,
     Graph, Kind, Kinship,
@@ -2036,6 +2037,36 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                 .transact("Find and replace", |tx| bulk::apply(tx, &spec))?;
             Ok(json!({"changed": n}))
         }
+        "query.run" => {
+            let c: query::Criteria =
+                serde_json::from_value(args.get("criteria").cloned().unwrap_or(json!({})))
+                    .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            let st = sess.store()?;
+            let ids = query::run(st, &c, 110, current_year())?;
+            let limit = u(&args, "limit", 200) as usize;
+            let items: Vec<Value> = ids
+                .iter()
+                .take(limit)
+                .map(|i| summary(st, i))
+                .collect::<Result<_, _>>()?;
+            Ok(json!({"total": ids.len(), "items": items}))
+        }
+        "query.saved" => Ok(json!(query::saved(sess.store()?)?)),
+        "query.save" => {
+            let c: query::Criteria =
+                serde_json::from_value(args.get("criteria").cloned().unwrap_or(json!({})))
+                    .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            let name = req(&args, "name")?;
+            if name.trim().is_empty() {
+                return Err(ApiError::new("bad_args", "a saved search needs a name"));
+            }
+            query::save(sess.store_mut()?, name.trim(), &c)?;
+            Ok(json!({"ok": true}))
+        }
+        "query.delete" => {
+            query::delete(sess.store_mut()?, &req(&args, "name")?)?;
+            Ok(json!({"ok": true}))
+        }
         "place.set_coords" => {
             let id = req(&args, "id")?;
             let lat = args.get("lat").and_then(|v| v.as_f64());
@@ -2266,6 +2297,21 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                 "ancestors" => report::ancestor_report(st, &req(&args, "id")?, &o)?,
                 "descendants" => report::descendant_report(st, &req(&args, "id")?, &o)?,
                 "book" => report::book(st, &req(&args, "id")?, &o)?,
+                "ahnentafel" => report::numbered_report(
+                    st,
+                    &req(&args, "id")?,
+                    &o,
+                    report::Numbering::Ahnentafel,
+                )?,
+                "daboville" => report::numbered_report(
+                    st,
+                    &req(&args, "id")?,
+                    &o,
+                    report::Numbering::DAboville,
+                )?,
+                "henry" => {
+                    report::numbered_report(st, &req(&args, "id")?, &o, report::Numbering::Henry)?
+                }
                 "bibliography" => report::bibliography(st, &o)?,
                 "family" => report::family_group_sheet(st, &req(&args, "id")?, &o)?,
                 other => {

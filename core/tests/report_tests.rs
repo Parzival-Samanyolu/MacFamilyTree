@@ -365,3 +365,94 @@ fn book_numbers_footnotes_continuously_and_has_one_index() {
         |b| matches!(b, Block::Heading { level: 2, text, .. } if text.starts_with("Descendants of"))
     ));
 }
+
+const NUMBERED: &str = "\
+0 @I1@ INDI\n1 NAME Ata /Kaya/\n1 SEX M\n1 BIRT\n2 DATE 1800\n1 DEAT\n2 DATE 1870\n1 FAMS @F1@\n\
+0 @I2@ INDI\n1 NAME Ana /Kaya/\n1 SEX F\n1 FAMS @F1@\n\
+0 @I3@ INDI\n1 NAME Bir /Kaya/\n1 SEX M\n1 BIRT\n2 DATE 1825\n1 FAMC @F1@\n1 FAMS @F2@\n\
+0 @I4@ INDI\n1 NAME Iki /Kaya/\n1 SEX F\n1 BIRT\n2 DATE 1828\n1 FAMC @F1@\n\
+0 @I5@ INDI\n1 NAME Cocuk /Kaya/\n1 SEX M\n1 BIRT\n2 DATE 2005\n1 FAMC @F2@\n\
+0 @F1@ FAM\n1 HUSB @I1@\n1 WIFE @I2@\n1 CHIL @I3@\n1 CHIL @I4@\n\
+0 @F2@ FAM\n1 HUSB @I3@\n1 CHIL @I5@\n";
+
+fn table(d: &Document) -> Vec<Vec<String>> {
+    d.blocks
+        .iter()
+        .find_map(|b| match b {
+            Block::Table { rows, .. } => Some(rows.clone()),
+            _ => None,
+        })
+        .unwrap()
+}
+
+#[test]
+fn numbered_reports_use_each_systems_numbering() {
+    let s = load(NUMBERED);
+    let o = Options {
+        generations: 4,
+        ..Default::default()
+    };
+    let ata = pid(&s, "Ata");
+    let d = numbered_report(&s, &ata, &o, Numbering::DAboville).unwrap();
+    assert_eq!(d.title, "d'Aboville descendants of Ata Kaya");
+    let t = table(&d);
+    let num = |name: &str| t.iter().find(|r| r[1].starts_with(name)).unwrap()[0].clone();
+    assert_eq!(
+        (
+            num("Ata").as_str(),
+            num("Bir").as_str(),
+            num("Iki").as_str(),
+            num("Cocuk").as_str()
+        ),
+        ("1", "1.1", "1.2", "1.1.1")
+    );
+    let h = table(&numbered_report(&s, &ata, &o, Numbering::Henry).unwrap());
+    assert_eq!(
+        h.iter().find(|r| r[1].starts_with("Cocuk")).unwrap()[0],
+        "111"
+    );
+    // Ahnentafel counts upward from the chosen person
+    let a = numbered_report(&s, &pid(&s, "Cocuk"), &o, Numbering::Ahnentafel).unwrap();
+    let rows = table(&a);
+    assert_eq!(rows[0][..2], ["1".to_string(), "Cocuk Kaya".to_string()]);
+    assert!(
+        rows.iter().any(|r| r[0] == "2" && r[1].starts_with("Bir")),
+        "father is 2: {rows:?}"
+    );
+    assert!(
+        rows.iter().any(|r| r[0] == "4" && r[1].starts_with("Ata")),
+        "paternal grandfather is 4"
+    );
+    assert_eq!(
+        rows.iter().find(|r| r[1].starts_with("Ata")).unwrap()[2..],
+        ["1800".to_string(), "1870".to_string()]
+    );
+}
+
+#[test]
+fn numbered_reports_honour_privacy_and_language() {
+    let s = load(NUMBERED);
+    let ata = pid(&s, "Ata");
+    let mask = Options {
+        privacy: Privacy::Mask,
+        generations: 4,
+        lang: ReportLang::Tr,
+        ..Default::default()
+    };
+    let t = table(&numbered_report(&s, &ata, &mask, Numbering::DAboville).unwrap());
+    let living = t.iter().find(|r| r[0] == "1.1.1").unwrap();
+    assert_eq!(living[1], "Yaşayan kişi");
+    assert!(living[2].is_empty());
+    let exclude = Options {
+        privacy: Privacy::Exclude,
+        generations: 4,
+        ..Default::default()
+    };
+    let t = table(&numbered_report(&s, &ata, &exclude, Numbering::DAboville).unwrap());
+    assert!(!t.iter().any(|r| r[1].contains("Cocuk")));
+    let missing = numbered_report(&s, "nope", &Options::default(), Numbering::Henry).unwrap();
+    assert!(missing
+        .blocks
+        .iter()
+        .all(|b| !matches!(b, Block::Table { .. })));
+}

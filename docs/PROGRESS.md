@@ -77,6 +77,9 @@ Three.js scene with LOD labels, 3 themes, accessible list; lazy-loaded chunk (Ma
 ## Gramps import, merge, line styles (done)
 `gramps.rs` (4 tests + API + E2E), merge-import test, divorced-partner lines.
 
+## Numbered reports, advanced search (done)
+`report::numbered_report`, `query.rs` (5 + 2 tests), `AdvancedSearch.tsx`, 2 E2E.
+
 ## Known issues
 * E2E tests have shown occasional timing races under heavy load (fixed case by case by waiting for rendered results). CI allows one retry.
 

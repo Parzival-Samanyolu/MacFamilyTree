@@ -20,3 +20,6 @@
 **Privacy.** *Mask* shows living people as “Living” with no dates, places or notes; *Remove* leaves them out entirely (counts of children adjust). Nobody's private details appear in anyone else's narrative.
 
 **Output.** Download **HTML** (self-contained, prints well, includes a table of contents and name index) or **Markdown**, or **Print** to save a PDF. Reports are generated from your data and shown in a sandboxed preview that cannot run scripts.
+
+## Numbered lists
+Besides narrative reports, you can create **Ahnentafel** (you are 1, your father 2, your mother 3, …), **d'Aboville** (1, 1.1, 1.1.2 …) and **Henry** (1, 11, 112 …) numbered lists as tables with birth and death years. Living people follow the privacy setting.

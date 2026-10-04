@@ -240,7 +240,8 @@
     "media": "Media",
     "virtual": "Virtual tree",
     "stories": "Stories",
-    "replace": "Find & replace"
+    "replace": "Find & replace",
+    "advsearch": "Advanced search"
   },
   "notes": {
     "add": "Add a note",
@@ -538,7 +539,10 @@
       "descendants": "Descendant report",
       "family": "Family group sheet",
       "book": "Family book (ancestors + descendants)",
-      "bibliography": "Bibliography"
+      "bibliography": "Bibliography",
+      "ahnentafel": "Ahnentafel (numbered ancestors)",
+      "daboville": "d'Aboville (numbered descendants)",
+      "henry": "Henry (numbered descendants)"
     }
   },
   "timeline": {
@@ -845,6 +849,39 @@
       "source_title": "Source title",
       "source_author": "Source author",
       "citation_page": "Citation page"
+    }
+  },
+  "advsearch": {
+    "any": "Any",
+    "yes": "Yes",
+    "no": "No",
+    "phonetic": "Sounds like (surname)",
+    "bornFrom": "Born from (year)",
+    "bornTo": "Born to (year)",
+    "diedFrom": "Died from (year)",
+    "diedTo": "Died to (year)",
+    "status": "Status",
+    "living": "Living",
+    "deceased": "Deceased",
+    "place": "Place (any event)",
+    "eventKind": "Has event",
+    "eventText": "Event text (e.g. occupation)",
+    "search": "Search",
+    "clear": "Clear",
+    "saveAs": "Name this search",
+    "save": "Save search",
+    "saved": "Saved “{{name}}”.",
+    "savedSearches": "Saved searches",
+    "noSaved": "No saved searches.",
+    "deleteSaved": "Delete saved search {{name}}",
+    "results": "{{count}} people",
+    "filters": "({{count}} filters)",
+    "flags": {
+      "has_media": "Has media",
+      "has_sources": "Has sources",
+      "has_parents": "Has parents recorded",
+      "has_children": "Has children recorded",
+      "bookmarked": "Favorite"
     }
   }
 }

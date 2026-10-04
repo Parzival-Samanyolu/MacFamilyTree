@@ -9,3 +9,6 @@ Select a person in **People**. The editor has five tabs.
 * **Notes & sources** – free-text notes and source citations (choose an existing source or create one, with page/detail).
 
 Deleting a person removes their names, events and links; families remain. Everything is undoable.
+
+## Advanced search
+**Advanced search** combines any of: given name, surname (optionally *sounds like*, using Soundex and Cologne phonetics, so “Kaia” finds Kaya and Kaja), birth and death year ranges, a place on any event, an event type or its text (for example an occupation), living or deceased, and whether the person has media, sources, recorded parents or children, or is a favorite. Name a search and **Save** it to rerun it later from the list on the right; saved searches live inside the project.

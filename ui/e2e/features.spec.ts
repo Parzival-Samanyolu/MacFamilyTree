@@ -548,8 +548,8 @@ test('find & replace: preview, apply across records, undo; digit shortcuts follo
   await expect.poll(async () => (await api<unknown[]>(request, 'search', { q: 'Kaplan' })).length).toBe(0)
   const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
   expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
-  // Ctrl+3 opens the third sidebar item (the family tree)
-  await page.keyboard.press('Control+3')
+  // Ctrl+4 opens the fourth sidebar item (the family tree)
+  await page.keyboard.press('Control+4')
   await expect(page.getByRole('navigation').getByRole('button', { name: /Family tree/ })).toHaveAttribute(
     'aria-current',
     'page',
@@ -599,4 +599,47 @@ test('a Gramps XML file imports like a GEDCOM', async ({ page }) => {
   await nav(page, /People/)
   await page.getByRole('searchbox').fill('Ayşe')
   await expect(rows(page)).toHaveCount(1)
+})
+
+test('numbered reports: Ahnentafel numbers ancestors and d’Aboville numbers descendants', async ({ page, request }) => {
+  await seedFamily(request)
+  await openPerson(page, 'Emre')
+  await nav(page, /Reports/)
+  await page.getByLabel('Report', { exact: true }).selectOption({ label: 'Ahnentafel (numbered ancestors)' })
+  await page.getByRole('button', { name: 'Create report' }).click()
+  const frame = page.frameLocator('[data-testid="report-frame"]')
+  await expect(frame.getByRole('row', { name: /^1 Emre Kaya/ })).toBeVisible()
+  await expect(frame.getByRole('row', { name: /^2 Ali Kaya/ })).toBeVisible()
+  await expect(frame.getByRole('row', { name: /^3 Fatma Demir/ })).toBeVisible()
+})
+
+test('advanced search: combine filters, sounds-like matching, save and rerun a search', async ({ page, request }) => {
+  await seedFamily(request)
+  await page.goto('/')
+  await nav(page, /Advanced search/)
+  await page.getByLabel('Surname', { exact: true }).fill('Kaia')
+  await page.getByLabel('Sounds like (surname)').check()
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  const res = page.getByTestId('adv-results')
+  await expect(res.getByRole('heading')).toContainText('2 people')
+  await expect(res.getByTestId('person-chip').filter({ hasText: 'Ali Kaya' })).toBeVisible()
+  await page.getByLabel('Born from (year)').fill('1960')
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await expect(res.getByRole('heading')).toContainText('1 people')
+  await page.getByLabel('Name this search').fill('Young Kayas')
+  await page.getByRole('button', { name: 'Save search' }).click()
+  await expect(
+    page.getByTestId('saved-searches').getByRole('button', { name: 'Young Kayas', exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Clear' }).click()
+  await page.getByTestId('saved-searches').getByRole('button', { name: 'Young Kayas', exact: true }).click()
+  await expect(res.getByRole('heading')).toContainText('1 people')
+  await expect(page.getByLabel('Born from (year)')).toHaveValue('1960')
+  await res.getByTestId('person-chip').first().click()
+  await expect(page.getByTestId('person-editor')).toBeVisible()
+  await nav(page, /Advanced search/)
+  await page.getByRole('button', { name: 'Delete saved search Young Kayas' }).click()
+  await expect(page.getByText('No saved searches.')).toBeVisible()
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
 })

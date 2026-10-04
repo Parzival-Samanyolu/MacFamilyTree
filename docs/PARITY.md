@@ -57,7 +57,7 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Autocomplete for places | ✅ | names / occupations / sources: ⬜ |
 | Bulk edit, find/replace | ✅ | `bulk_tests.rs`, E2E (11 text fields, preview, one-step undo) |
 | Age at event | ✅ | `event_json` |
-| Ahnentafel, d'Aboville, Henry numbering | 🟡 | core + `chart.numbering` API; no UI. Register: ⬜ |
+| Ahnentafel, d'Aboville, Henry numbering | ✅ | numbered reports (table, EN/TR, privacy); `report_tests.rs`. Register (NGSQ) format: ⬜ |
 | Living detection and privacy | ✅ | `model::living_ids`; masked/excluded in GEDCOM export. Reports: ⬜ |
 
 ## D. Interactive tree
@@ -100,7 +100,7 @@ Not done: face tagging / regions, OCR, video/audio thumbnails, folder watching, 
 Full CRUD for sources and repositories, source-type templates (census, BMD records, church book, newspaper, website, book, interview), reliability rating, citation quality/page, bibliography report, "unsourced facts" to-do view, citations in every report ✅. Per-type structured fields (beyond title hints) ⬜.
 
 ## N. Search 🟡
-FTS5 prefix search, Turkish/diacritic folding ✅. Soundex and Cologne phonetics used by duplicate detection (not exposed in search). Double Metaphone, Daitch–Mokotoff, query builder, saved searches ⬜.
+FTS5 prefix search, Turkish/diacritic folding ✅. Soundex and Cologne phonetics used by duplicate detection (not exposed in search). Advanced search ✅ (`core/query.rs`: name, sounds-like surname, birth/death year ranges, place, event kind/text, living/deceased, media/sources/parents/children/favorite flags) with saved searches ✅. Double Metaphone and Daitch–Mokotoff ⬜.
 
 ## O. Data quality ✅ (🟡 for extras)
 21 plausibility rules with severities, ignore list, auto-fix + undo; duplicate scoring, merge with full rewiring and undo, "not a duplicate" memory; orphan/dangling-reference checks. Place cleanup is in core only. Split project by branch ⬜.

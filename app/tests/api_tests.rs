@@ -1639,3 +1639,69 @@ fn gramps_xml_imports_through_the_gedcom_endpoint() {
         "store"
     );
 }
+
+#[test]
+fn advanced_search_and_saved_searches_via_api() {
+    let mut s = fresh();
+    for (g, sn, d) in [
+        ("Ali", "Kaya", "1850"),
+        ("Can", "Kaja", "1880"),
+        ("Zed", "Yildiz", "1990"),
+    ] {
+        let p = call(
+            &mut s,
+            "person.create",
+            json!({"given": g, "surname": sn, "sex": "M"}),
+        )["id"]
+            .clone();
+        call(
+            &mut s,
+            "event.put",
+            json!({"owner_type": "person", "owner_id": p, "kind": "BIRT", "date_text": d, "place_text": "Konya"}),
+        );
+    }
+    let r = call(
+        &mut s,
+        "query.run",
+        json!({"criteria": {"surname": "Kaia", "phonetic": true}}),
+    );
+    assert_eq!(r["total"], 2);
+    let r = call(
+        &mut s,
+        "query.run",
+        json!({"criteria": {"born_from": 1860, "place": "konya"}, "limit": 1}),
+    );
+    assert_eq!(
+        (r["total"].clone(), r["items"].as_array().unwrap().len()),
+        (json!(2), 1)
+    );
+    assert_eq!(
+        err(&mut s, "query.run", json!({"criteria": {"born_from": "x"}})),
+        "bad_args"
+    );
+    assert_eq!(
+        err(&mut s, "query.save", json!({"name": " ", "criteria": {}})),
+        "bad_args"
+    );
+    call(
+        &mut s,
+        "query.save",
+        json!({"name": "Old Konya", "criteria": {"born_to": 1900, "place": "Konya"}}),
+    );
+    let list = call(&mut s, "query.saved", json!({}));
+    assert_eq!(list[0]["name"], "Old Konya");
+    let again = call(
+        &mut s,
+        "query.run",
+        json!({"criteria": list[0]["criteria"]}),
+    );
+    assert_eq!(again["total"], 2);
+    call(&mut s, "query.delete", json!({"name": "Old Konya"}));
+    assert_eq!(
+        call(&mut s, "query.saved", json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+}

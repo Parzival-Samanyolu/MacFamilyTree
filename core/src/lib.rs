@@ -14,6 +14,7 @@ pub mod name;
 pub mod pkg;
 pub mod places;
 pub mod quality;
+pub mod query;
 pub mod relationship;
 pub mod report;
 pub mod site;

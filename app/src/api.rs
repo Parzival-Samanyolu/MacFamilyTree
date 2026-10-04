@@ -17,6 +17,7 @@ use kintree_core::relationship::{
 use kintree_core::report::{self, Privacy, ReportLang};
 use kintree_core::stats;
 use kintree_core::store::{new_id, Row, Store, StoreError, Tx};
+use kintree_core::story;
 use kintree_core::tabular;
 use kintree_core::timeline::{self, Scope};
 use serde::Serialize;
@@ -1918,6 +1919,38 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                 Ok(())
             })?;
             Ok(json!({"ok": true}))
+        }
+        // ---- stories ----
+        "story.list" => Ok(json!(story::list(sess.store()?)?)),
+        "story.get" => story::get(sess.store()?, &req(&args, "id")?)?
+            .ok_or_else(|| ApiError::new("not_found", "story")),
+        "story.save" => {
+            let blocks: Vec<story::StoryBlock> =
+                serde_json::from_value(args.get("blocks").cloned().unwrap_or(json!([])))
+                    .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            let title = req(&args, "title")?;
+            if title.trim().is_empty() {
+                return Err(ApiError::new("bad_args", "a story needs a title"));
+            }
+            let id = story::save(
+                sess.store_mut()?,
+                opt_s(&args, "id").as_deref(),
+                &title,
+                &blocks,
+            )?;
+            Ok(json!({"id": id}))
+        }
+        "story.delete" => {
+            story::delete(sess.store_mut()?, &req(&args, "id")?)?;
+            Ok(json!({"ok": true}))
+        }
+        "story.render" => {
+            let st = sess.store()?;
+            let o = report_options(st, &args);
+            let doc = story::render(st, &req(&args, "id")?, &o)?;
+            Ok(
+                json!({"title": doc.title, "html": report::to_html(&doc), "markdown": report::to_markdown(&doc)}),
+            )
         }
         "place.set_coords" => {
             let id = req(&args, "id")?;

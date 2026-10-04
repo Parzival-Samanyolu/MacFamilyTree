@@ -234,7 +234,8 @@
     "library": "Sources & tasks",
     "map": "Map",
     "media": "Media",
-    "virtual": "Virtual tree"
+    "virtual": "Virtual tree",
+    "stories": "Stories"
   },
   "notes": {
     "add": "Add a note",
@@ -748,5 +749,33 @@
       "night": "Night sky",
       "blueprint": "Blueprint"
     }
+  },
+  "stories": {
+    "untitled": "Untitled story",
+    "new": "New story",
+    "none": "No stories yet.",
+    "pick": "Create a story to begin.",
+    "editor": "Story editor",
+    "title": "Title",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "confirmDelete": "Delete the story “{{title}}”? You can undo this.",
+    "up": "Move up",
+    "down": "Move down",
+    "blockType": "Block type",
+    "addBlock": "Add block",
+    "preview": "Preview",
+    "by": "Attribution",
+    "person": "Person",
+    "pickImage": "Choose an image…",
+    "block": {
+      "heading": "Heading",
+      "text": "Text",
+      "quote": "Quote",
+      "person": "Person write-up",
+      "media": "Picture",
+      "timeline": "Timeline"
+    },
+    "remove": "Remove block"
   }
 }

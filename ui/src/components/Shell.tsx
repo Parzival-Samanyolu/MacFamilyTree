@@ -19,6 +19,7 @@ const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
   { view: 'media', icon: 'image', key: 'nav.media' },
   { view: 'calendar', icon: 'calendar', key: 'nav.calendar' },
   { view: 'relationship', icon: 'link', key: 'nav.relationship' },
+  { view: 'stories', icon: 'book', key: 'nav.stories' },
   { view: 'reports', icon: 'file', key: 'nav.reports' },
   { view: 'library', icon: 'book', key: 'nav.library' },
   { view: 'quality', icon: 'check', key: 'nav.quality' },

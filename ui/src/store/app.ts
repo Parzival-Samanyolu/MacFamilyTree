@@ -9,6 +9,7 @@ export type View =
   | 'timeline'
   | 'map'
   | 'virtual'
+  | 'stories'
   | 'media'
   | 'calendar'
   | 'relationship'

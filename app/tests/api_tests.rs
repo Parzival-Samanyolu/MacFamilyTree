@@ -1308,3 +1308,51 @@ fn media_import_dedupe_link_edit_and_undo() {
         "bad_args"
     );
 }
+
+#[test]
+fn stories_save_render_and_validate() {
+    let mut s = fresh();
+    let p = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Ali", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .clone();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": p, "kind": "BIRT", "date_text": "1850", "place_text": "Konya"}),
+    );
+    assert_eq!(
+        err(&mut s, "story.save", json!({"title": " ", "blocks": []})),
+        "bad_args"
+    );
+    assert_eq!(
+        err(
+            &mut s,
+            "story.save",
+            json!({"title": "x", "blocks": [{"type": "bogus"}]})
+        ),
+        "bad_args"
+    );
+    let id = call(
+        &mut s,
+        "story.save",
+        json!({"title": "Roots", "blocks": [
+        {"type": "heading", "text": "Where we began"},
+        {"type": "text", "text": "A long time ago."},
+        {"type": "person", "id": p}]}),
+    )["id"]
+        .clone();
+    assert_eq!(call(&mut s, "story.list", json!({}))[0]["blocks"], 3);
+    let r = call(&mut s, "story.render", json!({"id": id, "lang": "en"}));
+    let html = r["html"].as_str().unwrap();
+    assert!(
+        html.contains("Where we began") && html.contains("Ali Kaya was born in 1850 in Konya."),
+        "{html}"
+    );
+    let tr = call(&mut s, "story.render", json!({"id": id, "lang": "tr"}));
+    assert!(tr["html"].as_str().unwrap().contains("lang=\"tr\""));
+    call(&mut s, "story.delete", json!({"id": id}));
+    assert_eq!(err(&mut s, "story.get", json!({"id": id})), "not_found");
+}

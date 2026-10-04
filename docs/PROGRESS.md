@@ -61,6 +61,9 @@
 ## Virtual tree (done)
 Three.js scene with LOD labels, 3 themes, accessible list; lazy-loaded chunk (Map and Virtual tree split from the main bundle).
 
+## Stories (done)
+`story.rs` (4 tests), API (1 test), `Stories.tsx` (1 E2E incl. axe; the preview iframe is excluded from axe because axe cannot inject into script-less sandboxed frames).
+
 ## Known issues
 * One E2E test ("tree: changing generations and direction") failed once in a full run and passed in 14 later runs (10 of them under heavy CPU load); cause not identified. CI allows a single retry.
 

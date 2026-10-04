@@ -407,3 +407,52 @@ test('virtual tree: WebGL scene renders, themes change the picture, list navigat
   const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
   expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
 })
+
+test('stories: compose blocks, reorder, preview in English and Turkish, export, undo delete', async ({
+  page,
+  request,
+}) => {
+  await seedFamily(request)
+  await page.goto('/')
+  await nav(page, /Stories/)
+  await page.getByRole('button', { name: 'New story' }).click()
+  const editor = page.getByTestId('story-editor')
+  await editor.getByLabel('Title').fill('Our roots')
+  const add = async (type: string) => {
+    await editor.getByLabel('Block type').selectOption({ label: type })
+    await editor.getByRole('button', { name: 'Add block' }).click()
+  }
+  await add('Heading')
+  await editor.getByRole('textbox', { name: 'Heading' }).fill('Where it began')
+  await add('Text')
+  await editor.getByRole('textbox', { name: 'Text' }).fill('A village near Konya.')
+  await add('Person write-up')
+  await editor.getByLabel('Person').fill('Emre')
+  await editor.getByRole('option', { name: /Emre/ }).first().click()
+  const frame = page.frameLocator('[data-testid="story-frame"]')
+  await expect(frame.getByRole('heading', { name: 'Where it began' })).toBeVisible()
+  await expect(frame.getByText('A village near Konya.')).toBeVisible()
+  await expect(frame.getByText('Emre Kaya was born on 3 March 1980 in Konya, Türkiye.')).toBeVisible()
+  // Reorder: move the text above the heading
+  await page.getByTestId('story-blocks').locator('[data-block="text"]').getByRole('button', { name: 'Move up' }).click()
+  await expect(page.getByTestId('story-blocks').locator('li').first()).toHaveAttribute('data-block', 'text')
+  // Turkish narrative
+  await editor.getByRole('combobox', { name: 'Report language' }).selectOption('tr')
+  await expect(frame.getByText(/Emre Kaya, 3 Mart 1980 tarihinde Konya/)).toBeVisible()
+  // Persisted
+  await expect.poll(async () => (await api<{ blocks: number }[]>(request, 'story.list'))[0]?.blocks).toBe(3)
+  const dl = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Markdown' }).click()
+  expect(readFileSync(await (await dl).path(), 'utf8')).toContain('# Our roots')
+  const r = await new AxeBuilder({ page })
+    .exclude('[data-testid="story-frame"]')
+    .disableRules(['scrollable-region-focusable'])
+    .analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+  // Delete and undo
+  page.once('dialog', (d) => void d.accept())
+  await editor.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expect(page.getByText('No stories yet.')).toBeVisible()
+  await page.getByRole('button', { name: 'Undo' }).first().click()
+  await expect(page.getByTestId('story-list').getByRole('button', { name: /Our roots/ })).toBeVisible()
+})

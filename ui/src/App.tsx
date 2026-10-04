@@ -18,6 +18,7 @@ import { TreeView } from './views/TreeView'
 import { CalendarView } from './views/Calendar'
 import { Library } from './views/Library'
 import { Reports } from './views/Reports'
+import { Stories } from './views/Stories'
 import { Timeline } from './views/Timeline'
 const MapView = lazy(() => import('./views/MapView').then((m) => ({ default: m.MapView })))
 import { MediaView } from './views/MediaView'
@@ -32,6 +33,7 @@ const VIEW_KEYS: View[] = [
   'map',
   'media',
   'virtual',
+  'stories',
   'calendar',
   'relationship',
   'reports',
@@ -67,6 +69,8 @@ function RouterInner() {
       return <Relationship />
     case 'timeline':
       return <Timeline />
+    case 'stories':
+      return <Stories />
     case 'virtual':
       return <VirtualTree />
     case 'media':

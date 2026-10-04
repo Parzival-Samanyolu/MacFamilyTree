@@ -234,7 +234,8 @@
     "library": "Kaynaklar ve görevler",
     "map": "Harita",
     "media": "Ortam",
-    "virtual": "Sanal ağaç"
+    "virtual": "Sanal ağaç",
+    "stories": "Hikâyeler"
   },
   "notes": {
     "add": "Not ekle",
@@ -748,5 +749,33 @@
       "night": "Gece gökyüzü",
       "blueprint": "Mavi proje"
     }
+  },
+  "stories": {
+    "untitled": "Adsız hikâye",
+    "new": "Yeni hikâye",
+    "none": "Henüz hikâye yok.",
+    "pick": "Başlamak için bir hikâye oluşturun.",
+    "editor": "Hikâye düzenleyici",
+    "title": "Başlık",
+    "saved": "Kaydedildi",
+    "saving": "Kaydediliyor…",
+    "confirmDelete": "“{{title}}” hikâyesi silinsin mi? Geri alabilirsiniz.",
+    "up": "Yukarı taşı",
+    "down": "Aşağı taşı",
+    "blockType": "Blok türü",
+    "addBlock": "Blok ekle",
+    "preview": "Önizleme",
+    "by": "Kaynak / söyleyen",
+    "person": "Kişi",
+    "pickImage": "Bir görsel seçin…",
+    "block": {
+      "heading": "Başlık",
+      "text": "Metin",
+      "quote": "Alıntı",
+      "person": "Kişi yazısı",
+      "media": "Resim",
+      "timeline": "Zaman çizelgesi"
+    },
+    "remove": "Bloğu kaldır"
   }
 }

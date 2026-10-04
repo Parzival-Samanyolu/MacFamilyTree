@@ -38,7 +38,7 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Maps | ✅ | `geo_tests.rs`, `api_tests.rs`, E2E |
 | Media | 🟡 | `media_tests.rs`, `api_tests.rs`, E2E |
 | Virtual Tree (3D) | ✅ | `virtual3d.test.ts`, E2E (WebGL) |
-| Stories | ⬜ | |
+| Stories | ✅ | `story_tests.rs`, `api_tests.rs`, E2E |
 | Sources | ✅ | standalone browser with source-type templates, reliability, repositories |
 | Notes | 🟡 | add/remove notes on a person; no standalone browser |
 | Charts | 🟡 | see E |
@@ -90,8 +90,8 @@ All listed measures except "average lifespan by decade" (century only) — `core
 Individual summary, ancestor (Ahnentafel), descendant (d'Aboville), family group sheet, family book (continuous footnotes, name index, contents), bibliography ✅. Narrative sentences in English and Turkish from user-editable templates (vowel harmony, gender/plural handling, date precision) ✅; living-person masking/exclusion ✅; footnoted citations ✅; HTML and Markdown output, print to PDF ✅ (`core/report.rs`, `report_tests.rs`, E2E).
 Not done: DOCX/ODT output, Evidence-Explained style, register/NGSQ report, Henry numbering report, outline descendant, surname/place reports, media gallery, birthday-list/to-do/research-log/completeness reports, cover page designer, narrative languages beyond EN/TR.
 
-## K–L. Stories ⬜, Media 🟡
-Stories: schema table only.
+## K–L. Stories ✅, Media 🟡
+Stories (`core/story.rs`, `Stories.tsx`): ordered blocks – heading, text, quote, person write-up (narrative + events), picture (embedded as data URI), person timeline; autosave, reorder, live sandboxed preview in EN/TR, privacy (living people and their pictures omitted), HTML/Markdown export. Not done: layout themes, slide/presentation mode, embedded maps and charts.
 
 Media (`core/media.rs`, `MediaView`, person *Media* tab) ✅: add files by picker or drag-and-drop (images, documents, audio, video); bytes are embedded in the project file (schema v2 `media_blob`) so backups and copies are self-contained; SHA-256 de-duplication; 320 px JPEG thumbnails with EXIF orientation; EXIF date, camera and GPS parsed, with one-click suggestions (date, nearest known place within 30 km); captions, dates, places; link to persons (also from the person editor), profile photo, unlink; search and type/unlinked/missing filters; slideshow with keyboard and autoplay; relink files for GEDCOM-imported items that only had a path; download original; delete with undo (bytes are kept until `media.purge`).
 Not done: face tagging / regions, OCR, video/audio thumbnails, GEDZIP packaging, folder watching, bulk resize.

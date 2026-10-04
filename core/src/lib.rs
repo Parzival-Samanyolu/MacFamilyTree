@@ -14,6 +14,7 @@ pub mod relationship;
 pub mod report;
 pub mod stats;
 pub mod store;
+pub mod story;
 pub mod synth;
 pub mod tabular;
 pub mod timeline;

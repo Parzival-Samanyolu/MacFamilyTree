@@ -62,6 +62,12 @@ pub enum Block {
         rows: Vec<Vec<String>>,
     },
     List(Vec<String>),
+    /// Picture with a `data:` URI (stories); Markdown output keeps only the caption.
+    Image {
+        src: String,
+        alt: String,
+        caption: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -1204,6 +1210,17 @@ pub fn to_html(d: &Document) -> String {
                 h.push_str(&format!("<h{l}{id}>{}</h{l}>\n", esc(text), l = level));
             }
             Block::Para(p) => h.push_str(&format!("<p>{}</p>\n", inline_html(p))),
+            Block::Image { src, alt, caption } => {
+                h.push_str(&format!(
+                    "<figure><img src=\"{}\" alt=\"{}\" style=\"max-width:100%\">{}</figure>\n",
+                    esc(src),
+                    esc(alt),
+                    caption
+                        .as_ref()
+                        .map(|c| format!("<figcaption>{}</figcaption>", esc(c)))
+                        .unwrap_or_default()
+                ));
+            }
             Block::List(items) => {
                 h.push_str("<ul>");
                 for i in items {
@@ -1270,6 +1287,9 @@ pub fn to_markdown(d: &Document) -> String {
                 text
             )),
             Block::Para(p) => m.push_str(&format!("{}\n\n", p)),
+            Block::Image { alt, caption, .. } => {
+                m.push_str(&format!("*[{}]*\n\n", caption.as_ref().unwrap_or(alt)))
+            }
             Block::List(items) => {
                 for i in items {
                     m.push_str(&format!("- {}\n", i));

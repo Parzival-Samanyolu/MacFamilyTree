@@ -1569,3 +1569,73 @@ fn bulk_find_and_replace_previews_applies_and_validates() {
         "store"
     );
 }
+
+#[test]
+fn tree_layout_marks_partner_lines_of_ended_unions() {
+    let mut s = fresh();
+    let me = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Emre", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .clone();
+    let w = call(
+        &mut s,
+        "relative.add",
+        json!({"person_id": me, "kind": "partner", "given": "Ece"}),
+    );
+    let fam = w["family_id"].clone();
+    call(
+        &mut s,
+        "relative.add",
+        json!({"person_id": me, "kind": "child", "family_id": fam, "given": "Can"}),
+    );
+    let links = |s: &mut Session| -> Vec<String> {
+        call(s, "tree.layout", json!({"root": me, "mode": "hourglass"}))["layout"]["edges"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|e| e["kind"] == "Partner")
+            .map(|e| e["link"].as_str().unwrap().to_string())
+            .collect()
+    };
+    assert!(
+        links(&mut s).iter().all(|l| l.is_empty()),
+        "married lines are plain"
+    );
+    call(
+        &mut s,
+        "family.update",
+        json!({"id": fam, "rel_type": "divorced"}),
+    );
+    let l = links(&mut s);
+    assert!(!l.is_empty() && l.iter().all(|x| x == "divorced"), "{l:?}");
+}
+
+#[test]
+fn gramps_xml_imports_through_the_gedcom_endpoint() {
+    let mut s = Session::new();
+    let xml = std::fs::read(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../samples/gramps/kaya.gramps"
+    ))
+    .unwrap();
+    let r = call(&mut s, "gedcom.import", json!({"data": B64.encode(&xml)}));
+    assert_eq!(r["source"], "gramps");
+    assert_eq!(r["report"]["persons"], 3);
+    assert_eq!(
+        call(&mut s, "search", json!({"q": "Aliş"}))
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        err(
+            &mut Session::new(),
+            "gedcom.import",
+            json!({"data": B64.encode("<database xmlns='http://gramps-project.org/x'><events></database>")})
+        ),
+        "store"
+    );
+}

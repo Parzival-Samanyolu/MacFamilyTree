@@ -16,6 +16,7 @@ import { MediaThumb } from './MediaThumb'
 import { Associations, PersonHistory } from './PersonExtras'
 import { uploadFiles, type MediaItem } from '../lib/media'
 
+const FAM_REL = ['married', 'partners', 'divorced', 'separated', 'unmarried', 'friends', 'unknown']
 const REL_KINDS = ['father', 'mother', 'partner', 'child', 'sibling'] as const
 type RelKind = (typeof REL_KINDS)[number]
 
@@ -519,12 +520,12 @@ function Relationships({
                   value={f.rel_type}
                   onChange={(e) => act('family.update', { id: f.id, rel_type: e.target.value })}
                 >
-                  {['married', 'partners', 'unmarried', 'friends', 'unknown'].map((r) => (
+                  {FAM_REL.map((r) => (
                     <option key={r} value={r}>
                       {t(`famrel.${r}`)}
                     </option>
                   ))}
-                  {!['married', 'partners', 'unmarried', 'friends', 'unknown'].includes(f.rel_type) && (
+                  {!FAM_REL.includes(f.rel_type) && (
                     <option value={f.rel_type}>{f.rel_type || t('famrel.unknown')}</option>
                   )}
                 </select>

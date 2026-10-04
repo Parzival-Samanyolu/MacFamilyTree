@@ -5,6 +5,7 @@ pub mod duplicates;
 pub mod facts;
 pub mod gedcom;
 pub mod geo;
+pub mod gramps;
 pub mod kinship_terms;
 pub mod layout;
 pub mod media;

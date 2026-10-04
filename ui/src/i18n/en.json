@@ -135,7 +135,9 @@
     "partners": "Partners",
     "unmarried": "Unmarried",
     "friends": "Friends",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "divorced": "Divorced",
+    "separated": "Separated"
   },
   "childrel": {
     "biological": "Biological",
@@ -169,12 +171,12 @@
   },
   "import": {
     "all": "All",
-    "choose": "Choose a GEDCOM file",
+    "choose": "Choose a GEDCOM, GEDZIP or Gramps file",
     "clean": "No problems found.",
     "done": "Imported {{persons}} people ({{issues}} notes in the import log)",
     "errors": "Errors",
     "events": "{{count}} events",
-    "hint": "GEDCOM 5.5, 5.5.1 and 7.0; UTF-8, UTF-16, ANSEL and ISO-8859-1. Unknown tags are preserved.",
+    "hint": "GEDCOM 5.5, 5.5.1 and 7.0 (also GEDZIP) and Gramps XML (.gramps); UTF-8, UTF-16, ANSEL and ISO-8859-1. Unknown tags are preserved. Importing into an open project adds to it, so you can combine two trees.",
     "infos": "Info",
     "issueCount": "{{count}} entries",
     "line": "Line",
@@ -188,7 +190,9 @@
       "info": "Info",
       "warning": "Warning",
       "error": "Error"
-    }
+    },
+    "mergeNote": "Imported people were added to the people already in this project.",
+    "findDuplicates": "Check for duplicates to merge the same person from both files."
   },
   "lang": {
     "en": "English",

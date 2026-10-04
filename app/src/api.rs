@@ -6,6 +6,7 @@ use kintree_core::duplicates;
 use kintree_core::facts::Facts;
 use kintree_core::gedcom::{self, Charset, Dialect, ExportOptions, LivingPolicy, Version};
 use kintree_core::geo;
+use kintree_core::gramps;
 use kintree_core::kinship_terms::{describe_all, Lang};
 use kintree_core::layout::{self, Direction, Options as LayoutOptions};
 use kintree_core::media;
@@ -897,6 +898,23 @@ fn tree_layout(store: &Store, args: &Value) -> Res {
         "descendants" => layout::layout_descendants(&g, &births, &root, &o),
         _ => layout::layout_hourglass(&g, &births, &root, &o),
     };
+    // Partner lines carry the partnership type so the chart can draw ended unions differently.
+    let mut l = l;
+    let rel_of: HashMap<String, String> = store
+        .rows("family")?
+        .into_iter()
+        .map(|f| (rs(&f, "id"), rs(&f, "rel_type")))
+        .collect();
+    let unions = l.unions.clone();
+    for e in l.edges.iter_mut() {
+        if e.to_union {
+            if let Some(rel) = unions.get(e.to).and_then(|u| rel_of.get(&u.family_id)) {
+                if e.kind == layout::EdgeKind::Partner && rel != "married" {
+                    e.link = rel.clone();
+                }
+            }
+        }
+    }
     let mut people: Map<String, Value> = Map::new();
     for n in &l.nodes {
         if !people.contains_key(&n.person_id) {
@@ -1313,6 +1331,11 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                 let r = import_bytes(sess, &ged)?;
                 let m = pkg::attach_media(sess.store_mut()?, &files)?;
                 return Ok(json!({"report": r, "media": m, "status": status(sess)}));
+            }
+            if gramps::looks_like_gramps(&bytes) {
+                let ged = gramps::to_gedcom(&bytes)?;
+                let r = import_bytes(sess, ged.as_bytes())?;
+                return Ok(json!({"report": r, "source": "gramps", "status": status(sess)}));
             }
             let r = import_bytes(sess, &bytes)?;
             Ok(json!({"report": r, "status": status(sess)}))

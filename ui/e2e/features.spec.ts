@@ -555,3 +555,48 @@ test('find & replace: preview, apply across records, undo; digit shortcuts follo
     'page',
   )
 })
+
+test('importing into an open project combines both trees and points to the duplicate check', async ({
+  page,
+  request,
+}) => {
+  await seedFamily(request)
+  await page.goto('/')
+  await nav(page, /Import \/ export/)
+  const dir = mkdtempSync(join(tmpdir(), 'kt-'))
+  const file = join(dir, 'other.ged')
+  writeFileSync(
+    file,
+    '0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Emre /Kaya/\n1 BIRT\n2 DATE 3 MAR 1980\n0 TRLR\n',
+  )
+  await page.getByTestId('import-file').setInputFiles(file)
+  await expect(page.getByTestId('import-report')).toBeVisible()
+  await expect(page.getByTestId('merge-note')).toBeVisible()
+  await page.getByRole('button', { name: 'Check for duplicates to merge the same person from both files.' }).click()
+  await expect(page.getByRole('heading', { name: 'Data quality' })).toBeVisible()
+  expect(await api<unknown[]>(request, 'search', { q: 'Emre' })).toHaveLength(2)
+})
+
+test('tree: lines of divorced or separated partnerships are drawn dotted', async ({ page, request }) => {
+  await seedFamily(request)
+  const people = await api<{ items: { id: string; given: string }[] }>(request, 'person.list', { limit: 50 })
+  const ali = people.items.find((p) => p.given === 'Ali')!.id
+  const d = await api<{ partner_families: { id: string }[] }>(request, 'person.get', { id: ali })
+  await api(request, 'family.update', { id: d.partner_families[0].id, rel_type: 'divorced' })
+  await openPerson(page, 'Ali')
+  await nav(page, /Family tree/)
+  await expect(page.getByTestId('tree-card').first()).toBeVisible()
+  await expect(page.locator('path[data-ended="1"]').first()).toBeAttached()
+})
+
+test('a Gramps XML file imports like a GEDCOM', async ({ page }) => {
+  await page.goto('/')
+  await nav(page, /Import \/ export/)
+  await page.getByTestId('import-file').setInputFiles('../samples/gramps/kaya.gramps')
+  const rep = page.getByTestId('import-report')
+  await expect(rep).toBeVisible()
+  await expect(rep).toContainText('3 people')
+  await nav(page, /People/)
+  await page.getByRole('searchbox').fill('Ayşe')
+  await expect(rows(page)).toHaveCount(1)
+})

@@ -318,7 +318,7 @@ function ProjectFiles() {
 
 export function ImportExport() {
   const { t } = useTranslation()
-  const { status, toast } = useApp()
+  const { status, toast, go } = useApp()
   const fileRef = useRef<HTMLInputElement>(null)
   const [report, setReport] = useState<ImportReport | null>(null)
   const [filter, setFilter] = useState<'all' | 'warning' | 'error' | 'info'>('all')
@@ -378,7 +378,7 @@ export function ImportExport() {
         <input
           ref={fileRef}
           type="file"
-          accept=".ged,.gedcom,.gedzip,.zip,text/plain"
+          accept=".ged,.gedcom,.gedzip,.zip,.gramps,.xml,text/plain"
           aria-label={t('import.choose')}
           className="input"
           onChange={(e) => onFile(e.target.files?.[0])}
@@ -394,6 +394,14 @@ export function ImportExport() {
               <span className="chip">{t('import.events', { count: report.events })}</span>
               <span className="chip">{t('import.preserved', { count: report.preserved_structures })}</span>
             </div>
+            {status.persons != null && status.persons > report.persons && (
+              <p className="mb-2 rounded-lg bg-[var(--accent-soft)] p-2 text-sm" data-testid="merge-note">
+                {t('import.mergeNote')}{' '}
+                <button type="button" className="underline" onClick={() => go('quality')}>
+                  {t('import.findDuplicates')}
+                </button>
+              </p>
+            )}
             <div className="mb-2 flex items-center gap-2">
               <label className="label !mb-0" htmlFor="issue-filter">
                 {t('import.show')}

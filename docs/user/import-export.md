@@ -14,3 +14,7 @@
 * **Static website** – a ZIP of plain HTML: an index with search plus one page per person (events, relatives, thumbnails). Choose English or Türkçe and whether living people are excluded, shown as “Living”, or included.
 * **GEDZIP** – a GEDCOM with all embedded photos and documents. Importing a `.gdz`/`.zip` re-attaches the files to the imported media items by file name.
 * **Encrypted backup** – the whole project, media included, protected by a password (Argon2id key derivation, ChaCha20-Poly1305). There is no recovery: keep the password safe.
+
+## Gramps and combining trees
+* **Gramps XML** (`.gramps`, compressed or plain) imports from the same file box as GEDCOM: people, names, events with dates and places (coordinates included), families, sources, citations and notes.
+* Importing into a project that already has people **adds** to it. Afterwards open **Data quality → Duplicates** to merge people who appear in both files.

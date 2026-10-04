@@ -10,20 +10,20 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Duplicate project / manual backup / restore | ✅ | `project.backup`, `project.restore`; same tests |
 | Automatic rolling backups | ✅ | `rolling_backup` (keeps 10) |
 | Recent projects list, lock screen | ⬜ | |
-| Password protection / AES-256-GCM + Argon2id | ⬜ | planned Phase 11 |
+| Password protection / Argon2id + authenticated encryption | 🟡 | encrypted backup/export ✅ (Argon2id + ChaCha20-Poly1305, decision 22); at-rest encryption of the live project file ⬜ (needs SQLCipher; not bundled) |
 | Import GEDCOM 5.5 / 5.5.1 / 7.0 | ✅ | `core/gedcom/import.rs`; `core/tests/gedcom_roundtrip.rs` |
 | Vendor extensions (`_UID`, `_PLAC`, `_MILT`, `_FSFTID`, …) | 🟡 | preserved verbatim and re-exported; not interpreted (e.g. `_MARNM` is kept, not turned into a married name) |
 | Lossless unknown tags | ✅ | `raw_tag` table; 15 clean files re-export tag-for-tag |
 | Character sets UTF-8 / UTF-16 / ANSEL / ASCII / ISO-8859-1 | 🟡 | `gedcom/charset.rs`; ANSEL covers common diacritics and letters, not the full table |
 | Malformed input handled with detailed log | ✅ | torture corpus; `malformed_file_reports_detailed_issues`; E2E import-log test |
-| GEDZIP ✅ (media re-attached by file name), CSV ✅, Gramps XML import | 🟡 | `pkg_site_tests.rs` |
+| GEDZIP ✅ (media re-attached by file name), CSV ✅, Gramps XML import ✅ (plain or gzip; people, names, events, families, places with coordinates, sources/citations, notes — translated to GEDCOM; Gramps tags/attributes/addresses/media paths not translated) | ✅ | `pkg_site_tests.rs`, `gramps_tests.rs` |
 | Export GEDCOM 5.5.1 / 7.0, living privacy, charset | ✅ | `gedcom/export.rs`; `living_privacy_mask_and_exclude`, `gedcom7_export_*` |
 | Target-software dialect | 🟡 | header identification only |
 | Export CSV and JSON | ✅ | `core/tabular.rs`; `timeline_tabular_tests.rs`; E2E CSV test |
 | Export PDF / HTML website | 🟡 | reports export to HTML/Markdown (print → PDF); static website export ✅ (`core/site.rs`: person pages, searchable index, relatives, thumbnails, EN/TR, living-person exclude/mask) |
 | Import CSV persons | ✅ | EN/TR headers, `;` delimiter, families rebuilt from ids |
 | Round-trip ≥ 15 files incl. torture | ✅ | `samples/gedcom/clean` (15) + `torture` (5) |
-| Merge two projects | ⬜ | person/family/place merge exist; whole-project merge does not |
+| Merge two projects | ✅ | importing into an open project appends (xrefs stay unique on export, `merge_import.rs`); the duplicate finder then merges people; UI points to it after import |
 
 ## B. Navigation
 | View | Status | Notes |
@@ -69,7 +69,7 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Multiple spouses, collapse/expand, pedigree-collapse stubs + jump | ✅ | |
 | Card designer (fields, size, colour by sex/generation/custom, rounded), saved styles | ✅ | |
 | Context menu, keyboard navigation, set root | ✅ | E2E |
-| Line styles by relationship | 🟡 | dashed for adopted/foster/step; divorced ⬜ |
+| Line styles by relationship | ✅ | dashed for adopted/foster/step, dotted for divorced/separated partnerships |
 | Export SVG / PNG, print | ✅ | PDF poster tiling, A0 plotter: ⬜ |
 | 60 fps at 10,000 visible nodes | ⬜ | SVG with viewport culling; Canvas/WebGL renderer not built; not measured |
 

@@ -389,11 +389,14 @@ export function TreeView() {
                       : touches(e.from) || touches(e.to)
                   if (!near) return null
                   const dashed = e.link === 'Adopted' || e.link === 'Foster' || e.link === 'Step'
+                  const ended = e.kind === 'Partner' && (e.link === 'divorced' || e.link === 'separated')
                   return (
                     <path
                       key={i}
                       d={edgePath(layout, e, vertical)}
-                      strokeDasharray={dashed ? '5 4' : undefined}
+                      strokeDasharray={dashed ? '5 4' : ended ? '1 5' : undefined}
+                      strokeLinecap={ended ? 'round' : undefined}
+                      data-ended={ended ? '1' : undefined}
                       stroke={e.kind === 'Partner' ? 'var(--accent)' : 'var(--muted)'}
                       opacity={e.kind === 'Partner' ? 0.7 : 0.8}
                     />

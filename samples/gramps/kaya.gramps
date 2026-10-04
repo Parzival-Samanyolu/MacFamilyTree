@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE database PUBLIC "-//Gramps//DTD Gramps XML 1.7.1//EN" "http://gramps-project.org/xml/1.7.1/grampsxml.dtd">
+<database xmlns="http://gramps-project.org/xml/1.7.1/">
+  <header><created date="2024-01-01" version="5.1.6"/><researcher/></header>
+  <events>
+    <event handle="_e1" id="E0001"><type>Birth</type><dateval val="1850-03-04"/><place hlink="_p2"/><citationref hlink="_c1"/></event>
+    <event handle="_e2" id="E0002"><type>Death</type><dateval val="1920" type="about"/><place hlink="_p1"/></event>
+    <event handle="_e3" id="E0003"><type>Birth</type><dateval val="1855-00-00"/></event>
+    <event handle="_e4" id="E0004"><type>Marriage</type><daterange start="1875-01-01" stop="1875-12-31"/><place hlink="_p2"/></event>
+    <event handle="_e5" id="E0005"><type>Birth</type><dateval val="1880-06-15"/></event>
+    <event handle="_e6" id="E0006"><type>Apprenticeship</type><description>Learned the trade of weaving</description><datespan start="1865" stop="1868"/></event>
+    <event handle="_e7" id="E0007"><type>Residence</type><datestr val="around the great flood"/><place hlink="_p2"/></event>
+  </events>
+  <people>
+    <person handle="_i1" id="I0001"><gender>M</gender><name type="Birth Name"><first>Ali</first><surname>Kaya</surname><nick>Aliş</nick></name>
+      <eventref hlink="_e1" role="Primary"/><eventref hlink="_e2" role="Primary"/><eventref hlink="_e6" role="Primary"/><eventref hlink="_e7" role="Primary"/><parentin hlink="_f1"/><noteref hlink="_n1"/><citationref hlink="_c1"/></person>
+    <person handle="_i2" id="I0002"><gender>F</gender><name type="Birth Name"><first>Ayşe</first><surname>Demir</surname></name><eventref hlink="_e3" role="Primary"/><parentin hlink="_f1"/></person>
+    <person handle="_i3" id="I0003"><gender>M</gender><name type="Birth Name"><first>Can</first><surname>Kaya</surname></name><name alt="1" type="Also Known As"><first>Canbaz</first><surname>Kaya</surname></name><eventref hlink="_e5" role="Primary"/><childof hlink="_f1"/></person>
+  </people>
+  <families>
+    <family handle="_f1" id="F0001"><rel type="Married"/><father hlink="_i1"/><mother hlink="_i2"/><eventref hlink="_e4" role="Family"/><childref hlink="_i3"/></family>
+  </families>
+  <citations><citation handle="_c1" id="C0001"><page>Folio 12</page><confidence>2</confidence><sourceref hlink="_s1"/></citation></citations>
+  <sources><source handle="_s1" id="S0001"><stitle>Konya parish register</stitle><sauthor>Priest Ahmet</sauthor><spubinfo>Konya, 1851</spubinfo></source></sources>
+  <places>
+    <placeobj handle="_p1" id="P0001" type="Country"><ptitle>Turkey</ptitle><pname value="Turkey"/></placeobj>
+    <placeobj handle="_p2" id="P0002" type="City"><ptitle>Konya, Turkey</ptitle><pname value="Konya"/><coord lat="37.87" long="32.48"/><placeref hlink="_p1"/></placeobj>
+  </places>
+  <notes><note handle="_n1" id="N0001" type="Person Note"><text>Weaver and
+ storyteller.</text></note></notes>
+</database>

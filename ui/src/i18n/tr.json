@@ -135,7 +135,9 @@
     "partners": "Partner",
     "unmarried": "Evli değil",
     "friends": "Arkadaş",
-    "unknown": "Bilinmiyor"
+    "unknown": "Bilinmiyor",
+    "divorced": "Boşanmış",
+    "separated": "Ayrı"
   },
   "childrel": {
     "biological": "Biyolojik",
@@ -169,12 +171,12 @@
   },
   "import": {
     "all": "Tümü",
-    "choose": "GEDCOM dosyası seçin",
+    "choose": "GEDCOM, GEDZIP veya Gramps dosyası seçin",
     "clean": "Sorun bulunmadı.",
     "done": "{{persons}} kişi içe aktarıldı (içe aktarma günlüğünde {{issues}} not)",
     "errors": "Hatalar",
     "events": "{{count}} olay",
-    "hint": "GEDCOM 5.5, 5.5.1 ve 7.0; UTF-8, UTF-16, ANSEL ve ISO-8859-1. Bilinmeyen etiketler korunur.",
+    "hint": "GEDCOM 5.5, 5.5.1 ve 7.0 (GEDZIP dahil) ile Gramps XML (.gramps); UTF-8, UTF-16, ANSEL ve ISO-8859-1. Bilinmeyen etiketler korunur. Açık bir projeye içe aktarmak ona ekler; böylece iki ağacı birleştirebilirsiniz.",
     "infos": "Bilgi",
     "issueCount": "{{count}} kayıt",
     "line": "Satır",
@@ -188,7 +190,9 @@
       "info": "Bilgi",
       "warning": "Uyarı",
       "error": "Hata"
-    }
+    },
+    "mergeNote": "İçe aktarılan kişiler bu projedeki mevcut kişilere eklendi.",
+    "findDuplicates": "Aynı kişiyi iki dosyadan birleştirmek için yinelenenleri denetleyin."
   },
   "lang": {
     "en": "English",

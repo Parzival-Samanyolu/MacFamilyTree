@@ -74,6 +74,9 @@ Three.js scene with LOD labels, 3 themes, accessible list; lazy-loaded chunk (Ma
 * Sidebar digit shortcuts now follow the visible sidebar order; sidebar scrolls.
 * Two timing flakes in E2E were test races (read counts / pressed Enter before results rendered) and are fixed.
 
+## Gramps import, merge, line styles (done)
+`gramps.rs` (4 tests + API + E2E), merge-import test, divorced-partner lines.
+
 ## Known issues
 * E2E tests have shown occasional timing races under heavy load (fixed case by case by waiting for rendered results). CI allows one retry.
 

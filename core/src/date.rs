@@ -892,7 +892,7 @@ impl GenDate {
         }
     }
 
-    fn fmt_part_locale(&self, p: &Part, loc: Locale) -> String {
+    fn fmt_part_locale(&self, p: &Part, loc: Locale, long: bool) -> String {
         let mut out = String::new();
         if let Some(d) = p.day {
             out.push_str(&d.to_string());
@@ -903,7 +903,13 @@ impl GenDate {
                 (Calendar::Gregorian | Calendar::Julian, Locale::Tr) => {
                     GREG_TR_LONG[(m - 1) as usize]
                 }
-                (Calendar::Gregorian | Calendar::Julian, Locale::En) => GREG_EN[(m - 1) as usize],
+                (Calendar::Gregorian | Calendar::Julian, Locale::En) => {
+                    if long {
+                        GREG_EN_LONG[(m - 1) as usize]
+                    } else {
+                        GREG_EN[(m - 1) as usize]
+                    }
+                }
                 _ => month_table(self.calendar)[(m - 1) as usize],
             };
             out.push_str(name);
@@ -918,14 +924,23 @@ impl GenDate {
 
     /// Human display ("abt 1900", "3 Mar 1850", "yak. 1900").
     pub fn format(&self, loc: Locale) -> String {
+        self.format_with(loc, false)
+    }
+
+    /// Like [`GenDate::format`] but with full month names, for prose ("3 March 1850").
+    pub fn format_long(&self, loc: Locale) -> String {
+        self.format_with(loc, true)
+    }
+
+    fn format_with(&self, loc: Locale, long: bool) -> String {
         let Some(a) = &self.a else {
             return self.phrase.clone().unwrap_or_default();
         };
-        let fa = self.fmt_part_locale(a, loc);
+        let fa = self.fmt_part_locale(a, loc, long);
         let fb = self
             .b
             .as_ref()
-            .map(|b| self.fmt_part_locale(b, loc))
+            .map(|b| self.fmt_part_locale(b, loc, long))
             .unwrap_or_default();
         let cal = match (self.calendar, loc) {
             (Calendar::Gregorian, _) => "",

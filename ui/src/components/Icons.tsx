@@ -108,6 +108,24 @@ export const Icons = {
       <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
     </Svg>
   ),
+  timeline: (
+    <Svg>
+      <path d="M4 6h10M4 12h16M4 18h7" />
+      <circle cx="17" cy="6" r="2" />
+      <circle cx="14" cy="18" r="2" />
+    </Svg>
+  ),
+  calendar: (
+    <Svg>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </Svg>
+  ),
+  book: (
+    <Svg>
+      <path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 21V5M8 7h7" />
+    </Svg>
+  ),
   help: (
     <Svg>
       <circle cx="12" cy="12" r="9" />

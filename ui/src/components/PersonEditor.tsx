@@ -335,7 +335,9 @@ function Events({ d }: { d: PersonDetail }) {
         <table className="w-full text-sm" data-testid="events-table">
           <thead className="bg-[var(--surface-2)] text-left">
             <tr>
-              <th className="w-6" />
+              <th className="w-6">
+                <span className="sr-only">{t('event.reorder')}</span>
+              </th>
               <th className="px-3 py-2">{t('event.type')}</th>
               <th className="px-3 py-2">{t('event.date')}</th>
               <th className="px-3 py-2">{t('event.age')}</th>

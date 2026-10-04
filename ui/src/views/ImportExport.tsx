@@ -6,6 +6,86 @@ import { downloadBlob } from '../lib/format'
 import { act } from '../lib/query'
 import { useApp } from '../store/app'
 
+function OtherFormats() {
+  const { t } = useTranslation()
+  const { status, toast, go } = useApp()
+  const csvRef = useRef<HTMLInputElement>(null)
+  const [warnings, setWarnings] = useState<string[] | null>(null)
+  const download = async (cmd: string, name: string, type: string) => {
+    try {
+      const r = await call<{ data: string; size: number }>(cmd, {})
+      downloadBlob(name, base64ToBytes(r.data) as BlobPart, type)
+      toast(t('export.done', { size: Math.max(1, Math.round(r.size / 1024)) }))
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    }
+  }
+  const importCsv = async (f: File | undefined) => {
+    if (!f) return
+    const bytes = new Uint8Array(await f.arrayBuffer())
+    const r = await act<{ persons: number; families: number; warnings: string[] }>('csv.import', {
+      data: bytesToBase64(bytes),
+    })
+    if (r) {
+      setWarnings(r.warnings)
+      toast(t('csv.imported', { persons: r.persons, families: r.families }))
+      if (!r.warnings.length) go('persons')
+    }
+    if (csvRef.current) csvRef.current.value = ''
+  }
+  return (
+    <section className="card p-4 lg:col-span-2">
+      <h2 className="mb-2 text-lg font-semibold">{t('csv.title')}</h2>
+      <p className="mb-3 text-sm text-[var(--muted)]">{t('csv.hint')}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className="btn"
+          disabled={!status.open}
+          onClick={() => download('export.csv', 'people.csv', 'text/csv')}
+        >
+          {t('csv.export')}
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={!status.open}
+          onClick={() => download('export.json', 'family-tree.json', 'application/json')}
+        >
+          {t('csv.exportJson')}
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={!status.open}
+          onClick={() => download('export.ical', 'family-calendar.ics', 'text/calendar')}
+        >
+          {t('csv.exportIcs')}
+        </button>
+        <label className="btn cursor-pointer" htmlFor="csv-file">
+          {t('csv.import')}
+        </label>
+        <input
+          id="csv-file"
+          ref={csvRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="sr-only"
+          data-testid="csv-file"
+          onChange={(e) => importCsv(e.target.files?.[0])}
+        />
+      </div>
+      {warnings && warnings.length > 0 && (
+        <ul className="mt-3 list-disc pl-5 text-sm text-[var(--warn)]" data-testid="csv-warnings">
+          {warnings.map((w, i) => (
+            <li key={i}>{w}</li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 function ProjectFiles() {
   const { t } = useTranslation()
   const { status, toast, go } = useApp()
@@ -119,6 +199,7 @@ export function ImportExport() {
   )
   return (
     <div className="mx-auto grid max-w-5xl gap-4 p-6 lg:grid-cols-2">
+      <h1 className="sr-only">{t('nav.importexport')}</h1>
       <section className="card p-4">
         <h2 className="mb-2 text-lg font-semibold">{t('import.title')}</h2>
         <p className="mb-3 text-sm text-[var(--muted)]">{t('import.hint')}</p>
@@ -232,6 +313,7 @@ export function ImportExport() {
         </button>
         <p className="mt-3 text-xs text-[var(--muted)]">{t('export.note')}</p>
       </section>
+      <OtherFormats />
       <ProjectFiles />
     </div>
   )

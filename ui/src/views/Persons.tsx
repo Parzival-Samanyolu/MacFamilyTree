@@ -194,6 +194,7 @@ export function Persons() {
         <PersonList query={debounced} sort={sort} bookmarked={bookmarked} />
       </section>
       <section className="min-w-0 flex-1 overflow-auto">
+        {!personId && <h1 className="sr-only">{t('nav.persons')}</h1>}
         {personId ? (
           <PersonEditor id={personId} key={personId} />
         ) : (

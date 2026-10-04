@@ -890,3 +890,269 @@ fn upcoming_birthdays_handle_month_ends_and_leap_days() {
         .expect("leap-day birthday listed");
     assert_eq!(leap["days"], 3);
 }
+
+fn family_session() -> (Session, String, String) {
+    let mut s = fresh();
+    let me = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Emre", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let dad = call(
+        &mut s,
+        "relative.add",
+        json!({"person_id": me, "kind": "father", "given": "Ali"}),
+    );
+    let mom = call(
+        &mut s,
+        "relative.add",
+        json!({"person_id": me, "kind": "mother", "given": "Fatma", "surname": "Demir"}),
+    );
+    for (id, date, place) in [
+        (me.as_str(), "3 Mar 1980", "Konya, Türkiye"),
+        (dad["person_id"].as_str().unwrap(), "1950", "Ankara"),
+        (mom["person_id"].as_str().unwrap(), "1955", "Kars"),
+    ] {
+        call(
+            &mut s,
+            "event.put",
+            json!({"owner_type": "person", "owner_id": id, "kind": "BIRT", "date_text": date, "place_text": place}),
+        );
+    }
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "family", "owner_id": dad["family_id"], "kind": "MARR", "date_text": "12 Jun 1975"}),
+    );
+    (s, me, dad["family_id"].as_str().unwrap().to_string())
+}
+
+#[test]
+fn report_endpoints_render_in_both_languages_and_templates_persist() {
+    let (mut s, me, fam) = family_session();
+    let en = call(
+        &mut s,
+        "report.generate",
+        json!({"kind": "individual", "id": me, "lang": "en"}),
+    );
+    assert!(en["markdown"]
+        .as_str()
+        .unwrap()
+        .contains("Emre Kaya was born on 3 March 1980 in Konya, Türkiye."));
+    assert!(en["html"].as_str().unwrap().starts_with("<!doctype html>"));
+    let tr = call(
+        &mut s,
+        "report.generate",
+        json!({"kind": "individual", "id": me, "lang": "tr"}),
+    );
+    assert!(
+        tr["markdown"]
+            .as_str()
+            .unwrap()
+            .contains("3 Mart 1980 tarihinde Konya, Türkiye'de doğdu."),
+        "{}",
+        tr["markdown"]
+    );
+    for kind in ["ancestors", "descendants", "book"] {
+        let r = call(
+            &mut s,
+            "report.generate",
+            json!({"kind": kind, "id": me, "generations": 3}),
+        );
+        assert!(
+            r["markdown"].as_str().unwrap().contains("Emre Kaya"),
+            "{kind}"
+        );
+    }
+    let f = call(
+        &mut s,
+        "report.generate",
+        json!({"kind": "family", "id": fam}),
+    );
+    assert!(f["title"]
+        .as_str()
+        .unwrap()
+        .starts_with("Family group sheet"));
+    assert_eq!(
+        err(&mut s, "report.generate", json!({"kind": "nope", "id": me})),
+        "bad_args"
+    );
+
+    call(
+        &mut s,
+        "report.set_template",
+        json!({"lang": "en", "key": "birth_full", "value": "Born {date} at {place}: {name}."}),
+    );
+    let en2 = call(
+        &mut s,
+        "report.generate",
+        json!({"kind": "individual", "id": me, "lang": "en"}),
+    );
+    assert!(en2["markdown"]
+        .as_str()
+        .unwrap()
+        .contains("Born on 3 March 1980 at Konya, Türkiye: Emre Kaya."));
+    let tpls = call(&mut s, "report.templates", json!({}));
+    let t = tpls
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|x| x["lang"] == "en" && x["key"] == "birth_full")
+        .unwrap();
+    assert_eq!(t["value"], "Born {date} at {place}: {name}.");
+    call(
+        &mut s,
+        "report.set_template",
+        json!({"lang": "en", "key": "birth_full", "value": ""}),
+    );
+    let en3 = call(
+        &mut s,
+        "report.generate",
+        json!({"kind": "individual", "id": me, "lang": "en"}),
+    );
+    assert!(
+        en3["markdown"]
+            .as_str()
+            .unwrap()
+            .contains("was born on 3 March 1980"),
+        "clearing restores the default"
+    );
+}
+
+#[test]
+fn timeline_calendar_and_exports_via_api() {
+    let (mut s, me, _) = family_session();
+    let t = call(&mut s, "timeline.get", json!({"scope": "person", "id": me}));
+    assert_eq!(t["entries"][0]["kind"], "BIRT");
+    let all = call(&mut s, "timeline.get", json!({"overlay": true}));
+    assert!(all["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|e| e["history"] == true));
+    let l = call(&mut s, "timeline.lifespans", json!({}));
+    assert_eq!(l["total"], 3);
+    let cal = call(&mut s, "calendar.month", json!({"year": 2026, "month": 3}));
+    assert!(cal
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|e| e["text"] == "Emre Kaya" && e["person"]["given"] == "Emre"));
+    let ics = String::from_utf8(
+        B64.decode(
+            call(&mut s, "export.ical", json!({}))["data"]
+                .as_str()
+                .unwrap(),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(ics.contains("BEGIN:VEVENT") && ics.contains("RRULE:FREQ=YEARLY"));
+    let csv = String::from_utf8(
+        B64.decode(
+            call(&mut s, "export.csv", json!({}))["data"]
+                .as_str()
+                .unwrap(),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(
+        csv.contains("Emre,Kaya,M,3 MAR 1980,\"Konya, Türkiye\""),
+        "{csv}"
+    );
+    let json_text = String::from_utf8(
+        B64.decode(
+            call(&mut s, "export.json", json!({}))["data"]
+                .as_str()
+                .unwrap(),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(
+        serde_json::from_str::<Value>(&json_text).unwrap()["tables"]["person"]
+            .as_array()
+            .unwrap()
+            .len()
+            == 3
+    );
+
+    // CSV round trip into a new project
+    let mut s2 = Session::new();
+    let r = call(
+        &mut s2,
+        "csv.import",
+        json!({"data": B64.encode(csv.as_bytes())}),
+    );
+    assert_eq!(r["persons"], 3);
+    assert_eq!(r["families"], 1);
+    assert_eq!(r["status"]["persons"], 3);
+}
+
+#[test]
+fn library_unsourced_facts_tasks_and_bibliography() {
+    let (mut s, me, _) = family_session();
+    let un = call(&mut s, "sources.unsourced", json!({}));
+    assert_eq!(un["total"], 4, "3 births + 1 marriage");
+    let birth = un["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|x| x["label"] == "Emre Kaya")
+        .unwrap();
+    call(
+        &mut s,
+        "citation.add",
+        json!({"target_type": "event", "target_id": birth["event_id"], "new_source_title": "Birth certificate", "page": "No. 77"}),
+    );
+    assert_eq!(
+        call(&mut s, "sources.unsourced", json!({}))["total"],
+        3,
+        "citing a fact removes it from the to-do list"
+    );
+
+    let t = call(
+        &mut s,
+        "task.save",
+        json!({"title": "Order the 1950 census", "priority": 2, "person_id": me, "status": "open"}),
+    );
+    call(
+        &mut s,
+        "task.save",
+        json!({"title": "Done thing", "status": "done"}),
+    );
+    let tasks = call(&mut s, "task.list", json!({}));
+    assert_eq!(
+        tasks[0]["title"], "Order the 1950 census",
+        "open tasks first, by priority"
+    );
+    assert_eq!(tasks[0]["person"]["given"], "Emre");
+    call(
+        &mut s,
+        "task.save",
+        json!({"id": t["id"], "title": "Order the 1950 census", "status": "done"}),
+    );
+    assert!(call(&mut s, "task.list", json!({}))
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|x| x["status"] == "done"));
+    assert_eq!(err(&mut s, "task.save", json!({"title": "  "})), "bad_args");
+
+    call(
+        &mut s,
+        "rec.put",
+        json!({"table": "source", "row": {"title": "Parish register", "author": "Priest Ahmet", "publication": "Konya, 1850"}}),
+    );
+    let b = call(&mut s, "report.generate", json!({"kind": "bibliography"}));
+    let md = b["markdown"].as_str().unwrap();
+    assert!(
+        md.contains("Priest Ahmet. *Parish register*. Konya, 1850. (0 citations)"),
+        "{md}"
+    );
+    assert!(md.contains("*Birth certificate*. (1 citation)"), "{md}");
+}

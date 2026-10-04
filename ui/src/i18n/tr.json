@@ -14,7 +14,8 @@
     "clear": "Temizle",
     "delete": "Sil",
     "save": "Kaydet",
-    "noResults": "Sonuç yok"
+    "noResults": "Sonuç yok",
+    "actions": "İşlemler"
   },
   "culture": {
     "patrilineal": "Babasoyadı (baba soyadı)",
@@ -112,7 +113,8 @@
       "DIV": "Boşanma",
       "DIVF": "Boşanma davası",
       "ANUL": "İptal"
-    }
+    },
+    "reorder": "Sıralamak için sürükleyin"
   },
   "export": {
     "button": "GEDCOM dışa aktar",
@@ -225,7 +227,11 @@
     "quality": "Veri kalitesi",
     "statistics": "İstatistikler",
     "importexport": "İçe / dışa aktar",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "timeline": "Zaman çizelgesi",
+    "calendar": "Takvim",
+    "reports": "Raporlar",
+    "library": "Kaynaklar ve görevler"
   },
   "notes": {
     "add": "Not ekle",
@@ -497,5 +503,145 @@
     "opened": "Proje açıldı",
     "created": "Proje oluşturuldu",
     "backedUp": "Yedek yazıldı"
+  },
+  "reports": {
+    "options": "Rapor seçenekleri",
+    "kind": "Rapor",
+    "forPerson": "Kişi",
+    "noPerson": "seçili değil – Kişiler’den birini seçin",
+    "family": "Aile",
+    "generations": "Kuşak: {{n}}",
+    "language": "Rapor dili",
+    "privacy": "Yaşayan kişiler",
+    "privacyOff": "Herkesi göster",
+    "generate": "Raporu oluştur",
+    "templates": "Cümle şablonları",
+    "templatesHint": "Raporlar bu cümle şablonlarından yazılır. {name}, {He}, {date}, {place}, {spouse}, {children}, {n} gibi yer tutucuları kullanın; yerleşik cümle için alanı boş bırakın.",
+    "empty": "Bir rapor seçin ve “Raporu oluştur”a basın.",
+    "preview": "Rapor önizlemesi",
+    "footnotes": "{{count}} kaynak",
+    "type": {
+      "individual": "Kişi özeti",
+      "ancestors": "Ata raporu",
+      "descendants": "Torun raporu",
+      "family": "Aile grubu çizelgesi",
+      "book": "Aile kitabı (atalar + torunlar)",
+      "bibliography": "Kaynakça"
+    }
+  },
+  "timeline": {
+    "tab": {
+      "events": "Olaylar",
+      "lifespans": "Yaşam süreleri"
+    },
+    "scope": "Çizelge kapsamı",
+    "scopeAll": "Tüm ağaç",
+    "scopePerson": "Seçili kişi ve ailesi",
+    "overlay": "Tarihî olayları göster",
+    "count": "{{count}} kayıt",
+    "allSurnames": "tüm soyadları",
+    "showing": "{{total}} kişiden {{n}} gösteriliyor",
+    "noSpans": "Henüz doğum yılı olan kişi yok.",
+    "estimatedHint": "Soluk çubukların sonu tahminidir (yaşayanlar bugüne kadar uzanır; aksi halde doğum + 70 yıl)."
+  },
+  "calendar": {
+    "prev": "Önceki ay",
+    "next": "Sonraki ay",
+    "deceased": "Vefat edenleri de dahil et",
+    "export": "iCalendar dışa aktar (.ics)",
+    "exported": "Takvim dışa aktarıldı",
+    "legend": "🎂 doğum günü (yaş) · 💍 evlilik yıldönümü (yıl) · ✝ vefat yıldönümü",
+    "BIRT": "Doğum günü: {{years}} yaşına giriyor",
+    "DEAT": "Vefat yıldönümü: {{years}} yıl",
+    "MARR": "Evlilik yıldönümü: {{years}} yıl"
+  },
+  "csv": {
+    "title": "Hesap tablosu, JSON ve takvim",
+    "hint": "Kişiler CSV olarak (her hesap tablosunda açılır; Türkçe Excel’in noktalı virgüllü dosyaları da anlaşılır), tüm proje JSON olarak, doğum günleri ve yıldönümleri iCalendar dosyası olarak.",
+    "export": "Kişileri dışa aktar (CSV)",
+    "exportJson": "Projeyi dışa aktar (JSON)",
+    "exportIcs": "Takvimi dışa aktar (.ics)",
+    "import": "CSV’den kişi içe aktar…",
+    "imported": "CSV’den {{persons}} kişi ve {{families}} aile içe aktarıldı"
+  },
+  "library": {
+    "tab": {
+      "sources": "Kaynaklar",
+      "repositories": "Arşivler",
+      "tasks": "Yapılacaklar",
+      "unsourced": "Kaynaksız olgular"
+    },
+    "filter": "Kaynakları süz…",
+    "addSource": "Kaynak ekle",
+    "editSource": "Kaynağı düzenle",
+    "noSources": "Henüz kaynak yok.",
+    "author": "Yazar",
+    "publication": "Yayın bilgisi",
+    "repository": "Arşiv",
+    "citations": "Atıflar",
+    "text": "Metin / çeviri yazı",
+    "template": "Kaynak türü",
+    "reliability": "Güvenilirlik",
+    "confirmDeleteSource": "“{{title}}” kaynağı ve onu kullanan tüm atıflar silinsin mi? Geri alabilirsiniz.",
+    "addRepository": "Arşiv ekle",
+    "editRepository": "Arşivi düzenle",
+    "noRepositories": "Henüz arşiv yok.",
+    "name": "Ad",
+    "address": "Adres",
+    "website": "Web sitesi",
+    "confirmDeleteRepo": "“{{name}}” arşivi silinsin mi?",
+    "taskTitle": "Yeni görev",
+    "priority": "Öncelik",
+    "due": "Son tarih",
+    "linkPerson": "Bir kişiye bağla (isteğe bağlı)",
+    "linkHint": "İpucu: genel bir görev için boş bırakın.",
+    "addTask": "Görev ekle",
+    "showDone": "Tamamlanan görevleri göster",
+    "noTasks": "Yapılacak bir şey yok. 🎉",
+    "status": "Durum",
+    "unsourcedHint": "{{count}} doğum, ölüm ve evliliğin henüz kaynak atfı yok.",
+    "allSourced": "Her doğum, ölüm ve evliliğin bir kaynağı var.",
+    "tpl": {
+      "none": "(yok)"
+    },
+    "kind": {
+      "census": "Nüfus sayımı",
+      "birth": "Doğum kaydı",
+      "marriage": "Evlilik kaydı",
+      "death": "Ölüm kaydı",
+      "church": "Kilise defteri",
+      "newspaper": "Gazete",
+      "website": "Web sitesi",
+      "book": "Kitap",
+      "interview": "Görüşme"
+    },
+    "hint": {
+      "census": "örn. 1881 İngiltere nüfus sayımı, Kent",
+      "birth": "örn. Ali Kaya doğum belgesi, 1850",
+      "marriage": "örn. Evlenme defteri, 1874",
+      "death": "örn. Ali Kaya ölüm belgesi, 1920",
+      "church": "örn. Konya kilise defteri, vaftizler 1840–1860",
+      "newspaper": "örn. Cumhuriyet, 4 Temmuz 1920, s. 12",
+      "website": "örn. Sayfa başlığı – site adı (erişim tarihi)",
+      "book": "örn. Kitabın adı",
+      "interview": "örn. Ayşe Kaya ile görüşme, 12 Mayıs 2024"
+    },
+    "rel": {
+      "0": "Güvenilmez",
+      "1": "Şüpheli",
+      "2": "İkincil",
+      "3": "Birincil / asıl"
+    },
+    "prio": {
+      "0": "Düşük",
+      "1": "Normal",
+      "2": "Yüksek",
+      "3": "Acil"
+    },
+    "st": {
+      "open": "Yapılacak",
+      "doing": "Sürüyor",
+      "done": "Bitti"
+    }
   }
 }

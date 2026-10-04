@@ -14,7 +14,8 @@
     "clear": "Clear",
     "delete": "Delete",
     "save": "Save",
-    "noResults": "No results"
+    "noResults": "No results",
+    "actions": "Actions"
   },
   "culture": {
     "patrilineal": "Patrilineal (father’s surname)",
@@ -112,7 +113,8 @@
       "DIV": "Divorce",
       "DIVF": "Divorce filed",
       "ANUL": "Annulment"
-    }
+    },
+    "reorder": "Drag to reorder"
   },
   "export": {
     "button": "Export GEDCOM",
@@ -225,7 +227,11 @@
     "quality": "Data quality",
     "statistics": "Statistics",
     "importexport": "Import / export",
-    "settings": "Settings"
+    "settings": "Settings",
+    "timeline": "Timeline",
+    "calendar": "Calendar",
+    "reports": "Reports",
+    "library": "Sources & tasks"
   },
   "notes": {
     "add": "Add a note",
@@ -497,5 +503,145 @@
     "opened": "Project opened",
     "created": "Project created",
     "backedUp": "Backup written"
+  },
+  "reports": {
+    "options": "Report options",
+    "kind": "Report",
+    "forPerson": "Person",
+    "noPerson": "none selected – pick one in People",
+    "family": "Family",
+    "generations": "Generations: {{n}}",
+    "language": "Report language",
+    "privacy": "Living people",
+    "privacyOff": "Show everyone",
+    "generate": "Create report",
+    "templates": "Sentence templates",
+    "templatesHint": "Reports are written from these sentence templates. Use {name}, {He}, {date}, {place}, {spouse}, {children}, {n} and so on; leave a field empty to use the built-in sentence.",
+    "empty": "Choose a report and press “Create report”.",
+    "preview": "Report preview",
+    "footnotes": "{{count}} sources",
+    "type": {
+      "individual": "Individual summary",
+      "ancestors": "Ancestor report",
+      "descendants": "Descendant report",
+      "family": "Family group sheet",
+      "book": "Family book (ancestors + descendants)",
+      "bibliography": "Bibliography"
+    }
+  },
+  "timeline": {
+    "tab": {
+      "events": "Events",
+      "lifespans": "Life spans"
+    },
+    "scope": "Timeline scope",
+    "scopeAll": "Whole tree",
+    "scopePerson": "Selected person and their families",
+    "overlay": "Show historical events",
+    "count": "{{count}} entries",
+    "allSurnames": "all surnames",
+    "showing": "Showing {{n}} of {{total}}",
+    "noSpans": "No people with a birth year yet.",
+    "estimatedHint": "Pale bars have an estimated end (living people run to today; otherwise birth + 70 years)."
+  },
+  "calendar": {
+    "prev": "Previous month",
+    "next": "Next month",
+    "deceased": "Include people who have died",
+    "export": "Export iCalendar (.ics)",
+    "exported": "Calendar exported",
+    "legend": "🎂 birthday (age) · 💍 wedding anniversary (years) · ✝ death anniversary",
+    "BIRT": "Birthday: turns {{years}}",
+    "DEAT": "Death anniversary: {{years}} years",
+    "MARR": "Wedding anniversary: {{years}} years"
+  },
+  "csv": {
+    "title": "Spreadsheet, JSON and calendar",
+    "hint": "People as CSV (opens in any spreadsheet; semicolon files from Turkish-locale Excel are understood), the whole project as JSON, or birthdays and anniversaries as an iCalendar file.",
+    "export": "Export people (CSV)",
+    "exportJson": "Export project (JSON)",
+    "exportIcs": "Export calendar (.ics)",
+    "import": "Import people from CSV…",
+    "imported": "Imported {{persons}} people and {{families}} families from CSV"
+  },
+  "library": {
+    "tab": {
+      "sources": "Sources",
+      "repositories": "Repositories",
+      "tasks": "To-do list",
+      "unsourced": "Unsourced facts"
+    },
+    "filter": "Filter sources…",
+    "addSource": "Add source",
+    "editSource": "Edit source",
+    "noSources": "No sources yet.",
+    "author": "Author",
+    "publication": "Publication details",
+    "repository": "Repository",
+    "citations": "Citations",
+    "text": "Text / transcription",
+    "template": "Source type",
+    "reliability": "Reliability",
+    "confirmDeleteSource": "Delete the source “{{title}}” and all citations that use it? You can undo this.",
+    "addRepository": "Add repository",
+    "editRepository": "Edit repository",
+    "noRepositories": "No repositories yet.",
+    "name": "Name",
+    "address": "Address",
+    "website": "Website",
+    "confirmDeleteRepo": "Delete the repository “{{name}}”?",
+    "taskTitle": "New task",
+    "priority": "Priority",
+    "due": "Due date",
+    "linkPerson": "Link to a person (optional)",
+    "linkHint": "Tip: leave empty for a general task.",
+    "addTask": "Add task",
+    "showDone": "Show completed tasks",
+    "noTasks": "Nothing to do. 🎉",
+    "status": "Status",
+    "unsourcedHint": "{{count}} births, deaths and marriages have no source citation yet.",
+    "allSourced": "Every birth, death and marriage has a source.",
+    "tpl": {
+      "none": "(none)"
+    },
+    "kind": {
+      "census": "Census",
+      "birth": "Birth record",
+      "marriage": "Marriage record",
+      "death": "Death record",
+      "church": "Church book",
+      "newspaper": "Newspaper",
+      "website": "Website",
+      "book": "Book",
+      "interview": "Interview"
+    },
+    "hint": {
+      "census": "e.g. 1881 Census of England, Kent",
+      "birth": "e.g. Birth certificate of Ali Kaya, 1850",
+      "marriage": "e.g. Marriage register, St Mary’s, 1874",
+      "death": "e.g. Death certificate of Ali Kaya, 1920",
+      "church": "e.g. Parish register of Konya, baptisms 1840–1860",
+      "newspaper": "e.g. The Times, 4 July 1920, p. 12",
+      "website": "e.g. Page title – site name (accessed date)",
+      "book": "e.g. Title of the book",
+      "interview": "e.g. Interview with Ayşe Kaya, 12 May 2024"
+    },
+    "rel": {
+      "0": "Unreliable",
+      "1": "Questionable",
+      "2": "Secondary",
+      "3": "Primary / original"
+    },
+    "prio": {
+      "0": "Low",
+      "1": "Normal",
+      "2": "High",
+      "3": "Urgent"
+    },
+    "st": {
+      "open": "To do",
+      "doing": "In progress",
+      "done": "Done"
+    }
   }
 }

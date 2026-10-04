@@ -36,10 +36,17 @@
 - **Quality gates met so far**: `cargo test --workspace` (93 tests), clippy `-D warnings`, rustfmt, ESLint (0 problems), Prettier,
   13 Vitest tests, 18 Playwright E2E tests (incl. axe-core on all main views), `npm audit` 0 vulnerabilities.
 
+- **Phases 6–8 (partial), second pass** — report engine with EN/TR narrative templates and privacy, footnotes and name index, HTML/Markdown
+  output; timeline + historical overlay, life-span chart, month calendar, iCalendar export; CSV import/export (EN/TR headers) and JSON export;
+  Library (sources with type templates, repositories, tasks, unsourced-facts list).
+- **Quality gates now**: 116 Rust tests, clippy `-D warnings`, 13 Vitest, 24 Playwright E2E (axe-core on every main view and on generated reports).
+  Bugs found by the new tests and fixed: CSV parent-pair ordering created duplicate families, report HTML lacked `<main>`/`<h1>`, empty table headers,
+  low-contrast warning colour, ARIA grid without rows.
+
 ## Next (priority order)
-1. Media, sources/repositories/notes/tasks browsers (Phase 6) — schema exists.
-2. Maps, timeline, calendar (Phase 7) — place engine exists.
-3. Reports, stories, website export (Phase 8).
+1. Media (import, thumbnails, EXIF, face regions, galleries) and a notes browser (Phase 6) — schema exists.
+2. Maps (Phase 7) — place engine exists; needs tile source + geocoding strategy.
+3. Stories, static website export, DOCX/ODT, more report types (Phase 8).
 4. Project encryption, CSV/GEDZIP/Gramps import, JSON/CSV export (Phases 2, 11).
 5. Canvas/WebGL renderer for 10k-node trees and a 60 fps measurement; typed bulk-insert path for GEDCOM import speed.
 6. Verify the Tauri bundle on macOS/Windows/Linux; add native file dialogs.

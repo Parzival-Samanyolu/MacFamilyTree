@@ -15,17 +15,21 @@ import { Relationship } from './views/Relationship'
 import { Settings } from './views/Settings'
 import { Statistics } from './views/Statistics'
 import { TreeView } from './views/TreeView'
+import { CalendarView } from './views/Calendar'
+import { Library } from './views/Library'
+import { Reports } from './views/Reports'
+import { Timeline } from './views/Timeline'
 
 const VIEW_KEYS: View[] = [
   'dashboard',
   'persons',
   'tree',
   'fan',
+  'timeline',
+  'calendar',
   'relationship',
-  'quality',
-  'statistics',
-  'importexport',
-  'settings',
+  'reports',
+  'library',
 ]
 
 function Router() {
@@ -41,6 +45,14 @@ function Router() {
       return <FanChart />
     case 'relationship':
       return <Relationship />
+    case 'timeline':
+      return <Timeline />
+    case 'calendar':
+      return <CalendarView />
+    case 'reports':
+      return <Reports />
+    case 'library':
+      return <Library />
     case 'quality':
       return <Quality />
     case 'statistics':

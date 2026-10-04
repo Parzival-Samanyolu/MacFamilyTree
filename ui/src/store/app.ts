@@ -2,7 +2,19 @@ import { create } from 'zustand'
 import type { Status } from '../api/types'
 
 export type View =
-  'dashboard' | 'persons' | 'tree' | 'fan' | 'relationship' | 'quality' | 'statistics' | 'importexport' | 'settings'
+  | 'dashboard'
+  | 'persons'
+  | 'tree'
+  | 'fan'
+  | 'timeline'
+  | 'calendar'
+  | 'relationship'
+  | 'reports'
+  | 'library'
+  | 'quality'
+  | 'statistics'
+  | 'importexport'
+  | 'settings'
 
 export type Theme = 'system' | 'light' | 'dark'
 

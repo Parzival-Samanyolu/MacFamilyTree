@@ -4,9 +4,9 @@ A private, offline, open-source family-tree application: a portable **Rust core*
 GEDCOM, relationships, data-quality tools, SQLite storage with unlimited undo) and a **React UI** that talks to it through
 one JSON command interface. KinTree is original work and is not affiliated with any commercial genealogy product.
 
-> **Status: early but working.** People, events, relationships, GEDCOM import/export, the interactive tree, fan chart,
-> relationship calculator, statistics and data-quality tools work and are tested end to end. Maps, media, reports, stories,
-> the 3D tree, sync and encryption are **not built yet** – see [docs/PARITY.md](docs/PARITY.md) for the exact state.
+> **Status: early but working.** People, events, relationships, GEDCOM and CSV import/export, the interactive tree, fan chart,
+> relationship calculator, statistics, data-quality tools, reports (English/Turkish narrative), timeline, calendar, sources and
+> tasks work and are tested end to end. Maps, media, stories, the 3D tree, sync and encryption are **not built yet** – see [docs/PARITY.md](docs/PARITY.md) for the exact state.
 
 ## Try it
 ```bash
@@ -21,7 +21,7 @@ The desktop shell (`src-tauri`, Tauri 2) uses the same command layer. It needs t
 
 ## Develop
 ```bash
-cargo test --workspace                      # ≈90 Rust tests incl. GEDCOM corpus round-trips
+cargo test --workspace                      # ≈115 Rust tests incl. GEDCOM corpus round-trips
 cargo clippy --workspace --all-targets -- -D warnings
 cd ui && npm run lint && npm test           # types, lint, unit tests (incl. translation coverage)
 cd ui && npm run e2e                        # Playwright against the real Rust core (set CHROMIUM_PATH if needed)

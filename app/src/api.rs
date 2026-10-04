@@ -12,8 +12,11 @@ use kintree_core::relationship::{
     ahnentafel, birth_keys, blood_relations, number_descendants, relationship, DescendantNumbering,
     Graph, Kind, Kinship,
 };
+use kintree_core::report::{self, Privacy, ReportLang};
 use kintree_core::stats;
 use kintree_core::store::{new_id, Row, Store, StoreError, Tx};
+use kintree_core::tabular;
+use kintree_core::timeline::{self, Scope};
 use serde::Serialize;
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
@@ -1038,6 +1041,38 @@ fn rolling_backup(path: &std::path::Path, keep: usize) -> std::io::Result<()> {
     Ok(())
 }
 
+fn report_templates(store: &Store) -> std::collections::HashMap<String, String> {
+    store
+        .conn()
+        .query_row(
+            "SELECT value FROM setting WHERE id = 'report_templates'",
+            [],
+            |r| r.get::<_, String>(0),
+        )
+        .ok()
+        .and_then(|j| serde_json::from_str(&j).ok())
+        .unwrap_or_default()
+}
+
+fn report_options(store: &Store, args: &Value) -> report::Options {
+    report::Options {
+        lang: if s(args, "lang").as_deref() == Some("tr") {
+            ReportLang::Tr
+        } else {
+            ReportLang::En
+        },
+        privacy: match s(args, "privacy").as_deref() {
+            Some("mask") => Privacy::Mask,
+            Some("exclude") => Privacy::Exclude,
+            _ => Privacy::Off,
+        },
+        current_year: current_year(),
+        living_years: 110,
+        generations: u(args, "generations", 4).clamp(1, 12) as usize,
+        templates: report_templates(store),
+    }
+}
+
 fn sample_gedcom() -> String {
     kintree_core::synth::generate_gedcom(30, 2024)
 }
@@ -1824,6 +1859,273 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
                 Ok(cid)
             })?;
             Ok(json!({"id": id}))
+        }
+        // ---- reports ----
+        "report.generate" => {
+            let st = sess.store()?;
+            let o = report_options(st, &args);
+            let doc = match req(&args, "kind")?.as_str() {
+                "individual" => report::individual_summary(st, &req(&args, "id")?, &o)?,
+                "ancestors" => report::ancestor_report(st, &req(&args, "id")?, &o)?,
+                "descendants" => report::descendant_report(st, &req(&args, "id")?, &o)?,
+                "book" => report::book(st, &req(&args, "id")?, &o)?,
+                "bibliography" => report::bibliography(st, &o)?,
+                "family" => report::family_group_sheet(st, &req(&args, "id")?, &o)?,
+                other => {
+                    return Err(ApiError::new(
+                        "bad_args",
+                        format!("unknown report kind {}", other),
+                    ))
+                }
+            };
+            Ok(
+                json!({"title": doc.title, "html": report::to_html(&doc), "markdown": report::to_markdown(&doc), "footnotes": doc.footnotes.len(), "index": doc.index.len()}),
+            )
+        }
+        "report.templates" => {
+            let st = sess.store()?;
+            let overrides = report_templates(st);
+            let keys = [
+                "birth_full",
+                "birth_date",
+                "birth_place",
+                "parents",
+                "parent_one",
+                "marriage_full",
+                "marriage_date",
+                "marriage_place",
+                "marriage",
+                "partner",
+                "children_one",
+                "children",
+                "occupation",
+                "occupation_date",
+                "residence",
+                "death_full",
+                "death_date",
+                "death_place",
+                "burial",
+            ];
+            let items: Vec<Value> = ["en", "tr"]
+                .iter()
+                .flat_map(|l| {
+                    let lang = if *l == "tr" { ReportLang::Tr } else { ReportLang::En };
+                    keys.iter().map(|k| json!({"lang": l, "key": k, "default": report::default_template(lang, k), "value": overrides.get(&format!("{}.{}", l, k))})).collect::<Vec<_>>()
+                })
+                .collect();
+            Ok(json!(items))
+        }
+        "report.set_template" => {
+            let (lang, key) = (req(&args, "lang")?, req(&args, "key")?);
+            let value = s(&args, "value").unwrap_or_default();
+            let st = sess.store_mut()?;
+            let mut m = report_templates(st);
+            if value.trim().is_empty() {
+                m.remove(&format!("{}.{}", lang, key));
+            } else {
+                m.insert(format!("{}.{}", lang, key), value);
+            }
+            let json_text = serde_json::to_string(&m)?;
+            st.transact("Edit report template", |tx| {
+                let mut r = Row::new();
+                r.insert("id".into(), "report_templates".into());
+                r.insert("value".into(), json_text.into());
+                tx.put_row("setting", r)?;
+                Ok(())
+            })?;
+            Ok(json!({"ok": true}))
+        }
+        // ---- timeline / calendar ----
+        "timeline.get" => {
+            let st = sess.store()?;
+            let scope = s(&args, "scope").unwrap_or_else(|| "all".into());
+            let id = s(&args, "id").unwrap_or_default();
+            let sc = match scope.as_str() {
+                "person" => Scope::Person(&id),
+                "family" => Scope::Family(&id),
+                "surname" => Scope::Surname(&id),
+                _ => Scope::All,
+            };
+            let entries = timeline::timeline(st, sc, b(&args, "overlay", false), locale(st))?;
+            let total = entries.len();
+            Ok(
+                json!({"total": total, "entries": entries.into_iter().take(u(&args, "limit", 1000) as usize).collect::<Vec<_>>()}),
+            )
+        }
+        "timeline.lifespans" => {
+            let st = sess.store()?;
+            let sn = s(&args, "surname").filter(|x| !x.trim().is_empty());
+            let mut v = timeline::lifespans(st, sn.as_deref(), current_year(), 110)?;
+            let total = v.len();
+            v.truncate(u(&args, "limit", 300) as usize);
+            Ok(json!({"total": total, "items": v}))
+        }
+        "timeline.history" => Ok(json!(timeline::history_events(sess.store()?)?)),
+        "calendar.month" => {
+            let st = sess.store()?;
+            let year = args
+                .get("year")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(current_year() as i64) as i32;
+            let month = u(&args, "month", 1).clamp(1, 12) as u8;
+            let v = timeline::calendar_month(
+                st,
+                year,
+                month,
+                b(&args, "include_deceased", false),
+                current_year(),
+                110,
+            )?;
+            let mut out = vec![];
+            for e in v {
+                let mut j = serde_json::to_value(&e)?;
+                if let Some(p) = &e.person_id {
+                    j["person"] = summary(st, p)?;
+                }
+                out.push(j);
+            }
+            Ok(json!(out))
+        }
+        // ---- export / import (tabular) ----
+        "export.ical" => {
+            let text = timeline::ical(
+                sess.store()?,
+                b(&args, "include_deceased", false),
+                current_year(),
+                110,
+            )?;
+            Ok(json!({"data": B64.encode(text.as_bytes()), "size": text.len()}))
+        }
+        "export.csv" => {
+            let text = tabular::persons_csv(sess.store()?)?;
+            Ok(json!({"data": B64.encode(text.as_bytes()), "size": text.len()}))
+        }
+        "export.json" => {
+            let text = serde_json::to_string_pretty(&tabular::project_json(sess.store()?)?)?;
+            Ok(json!({"data": B64.encode(text.as_bytes()), "size": text.len()}))
+        }
+        "csv.import" => {
+            let bytes = B64
+                .decode(req(&args, "data")?)
+                .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            let text = String::from_utf8_lossy(&bytes).into_owned();
+            if sess.store.is_none() {
+                sess.store = Some(Store::open_memory()?);
+            }
+            let rep = sess
+                .store_mut()?
+                .transact("Import CSV", |tx| tabular::import_persons_csv(tx, &text))?;
+            Ok(
+                json!({"persons": rep.persons, "families": rep.families, "warnings": rep.warnings, "status": status(sess)}),
+            )
+        }
+        // ---- library: sources without citations, tasks ----
+        "sources.unsourced" => {
+            // Birth, death and marriage facts that have no citation, so researchers know what to verify next.
+            let st = sess.store()?;
+            let facts = Facts::load(st)?;
+            let cited: std::collections::HashSet<String> = st
+                .rows("citation")?
+                .into_iter()
+                .filter(|c| c["target_type"] == "event")
+                .filter_map(|c| c["target_id"].as_str().map(String::from))
+                .collect();
+            let loc = locale(st);
+            let mut items = vec![];
+            let mut total = 0;
+            for e in &facts.events {
+                if !matches!(e.kind.as_str(), "BIRT" | "DEAT" | "MARR") || cited.contains(&e.id) {
+                    continue;
+                }
+                total += 1;
+                if items.len() >= u(&args, "limit", 200) as usize {
+                    continue;
+                }
+                let (person, label) = match e.owner_type.as_str() {
+                    "person" => (Some(e.owner_id.clone()), facts.display_name(&e.owner_id)),
+                    _ => {
+                        let fam = facts.families.iter().find(|f| f.id == e.owner_id);
+                        (
+                            fam.and_then(|f| f.partners.first().cloned()),
+                            fam.map(|f| {
+                                f.partners
+                                    .iter()
+                                    .map(|p| facts.display_name(p))
+                                    .collect::<Vec<_>>()
+                                    .join(" & ")
+                            })
+                            .unwrap_or_default(),
+                        )
+                    }
+                };
+                items.push(json!({"event_id": e.id, "kind": e.kind, "label": label, "person_id": person, "date_text": e.date.as_ref().map(|d| d.format(loc))}));
+            }
+            Ok(json!({"total": total, "items": items}))
+        }
+        "task.save" => {
+            let title = req(&args, "title")?;
+            if title.trim().is_empty() {
+                return Err(ApiError::new("bad_args", "a task needs a title"));
+            }
+            let id = s(&args, "id").unwrap_or_else(new_id);
+            let person = s(&args, "person_id");
+            let is_new = s(&args, "id").is_none();
+            sess.store_mut()?
+                .transact(if is_new { "Add task" } else { "Edit task" }, |tx| {
+                    let mut r = Row::new();
+                    r.insert("id".into(), id.clone().into());
+                    r.insert("title".into(), title.trim().into());
+                    for k in ["description", "status"] {
+                        if args.get(k).is_some() {
+                            r.insert(k.into(), s(&args, k).unwrap_or_default().into());
+                        }
+                    }
+                    if let Some(p) = args.get("priority").and_then(|v| v.as_i64()) {
+                        r.insert("priority".into(), p.clamp(0, 3).into());
+                    }
+                    if args.get("due").is_some() {
+                        r.insert(
+                            "due".into(),
+                            args["due"].as_i64().map(Value::from).unwrap_or(Value::Null),
+                        );
+                    }
+                    tx.put_row("task", r)?;
+                    if let (true, Some(p)) = (is_new, person.clone()) {
+                        let mut l = Row::new();
+                        l.insert("id".into(), new_id().into());
+                        l.insert("task_id".into(), id.clone().into());
+                        l.insert("target_type".into(), "person".into());
+                        l.insert("target_id".into(), p.into());
+                        tx.put_row("task_link", l)?;
+                    }
+                    Ok(())
+                })?;
+            Ok(json!({"id": id}))
+        }
+        "task.list" => {
+            let st = sess.store()?;
+            let mut person_of: HashMap<String, String> = HashMap::new();
+            for l in st.rows("task_link")? {
+                if l["target_type"] == "person" {
+                    person_of.insert(rs(&l, "task_id"), rs(&l, "target_id"));
+                }
+            }
+            let mut out = vec![];
+            for t in st.rows("task")? {
+                let mut j = Value::Object(t.clone());
+                if let Some(p) = person_of.get(&rs(&t, "id")) {
+                    j["person"] = summary(st, p).unwrap_or(Value::Null);
+                }
+                out.push(j);
+            }
+            out.sort_by_key(|t| {
+                (
+                    t["status"] == "done",
+                    -t["priority"].as_i64().unwrap_or(0),
+                    t["due"].as_i64().unwrap_or(i64::MAX),
+                )
+            });
+            Ok(json!(out))
         }
         "dashboard.data" => dashboard(sess.store()?, &args),
         "date.parse" => {

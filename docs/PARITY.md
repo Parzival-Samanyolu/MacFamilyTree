@@ -19,7 +19,9 @@ Maps every section of the original requirements to its status. ✅ done and test
 | GEDZIP, CSV, Gramps XML import | ⬜ | |
 | Export GEDCOM 5.5.1 / 7.0, living privacy, charset | ✅ | `gedcom/export.rs`; `living_privacy_mask_and_exclude`, `gedcom7_export_*` |
 | Target-software dialect | 🟡 | header identification only |
-| Export CSV / JSON / PDF / HTML website | ⬜ | |
+| Export CSV and JSON | ✅ | `core/tabular.rs`; `timeline_tabular_tests.rs`; E2E CSV test |
+| Export PDF / HTML website | 🟡 | reports export to HTML/Markdown (print → PDF); static website export ⬜ |
+| Import CSV persons | ✅ | EN/TR headers, `;` delimiter, families rebuilt from ids |
 | Round-trip ≥ 15 files incl. torture | ✅ | `samples/gedcom/clean` (15) + `torture` (5) |
 | Merge two projects | ⬜ | person/family/place merge exist; whole-project merge does not |
 
@@ -30,8 +32,12 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Persons (list + inspector) | ✅ | virtualised; 2,000-person E2E |
 | Families | 🟡 | edited inside the person's Relationships tab; no standalone list |
 | Tree (interactive) | ✅ | see D |
-| Virtual Tree (3D), Maps, Timeline, Media, Repositories, Stories, Tasks, Reports, Calendar | ⬜ | |
-| Sources, Notes | 🟡 | add/remove citations and notes on a person; no standalone browsers |
+| Timeline, Calendar | ✅ | `core/timeline.rs`; E2E |
+| Reports | ✅ | see J |
+| Repositories, Tasks | ✅ | Library view |
+| Virtual Tree (3D), Maps, Media, Stories | ⬜ | |
+| Sources | ✅ | standalone browser with source-type templates, reliability, repositories |
+| Notes | 🟡 | add/remove notes on a person; no standalone browser |
 | Charts | 🟡 | see E |
 | Statistics, Duplicates, Plausibility, Settings | ✅ | |
 | Global search / command palette (Ctrl/Cmd-K) | ✅ | E2E palette test |
@@ -66,19 +72,24 @@ Maps every section of the original requirements to its status. ✅ done and test
 
 ## E. Charts
 Ancestor ✅, Descendant ✅, Hourglass ✅, Fan (360/180/90°) ✅, statistics charts ✅ (drill-down). Relationship **calculator** ✅ (no drawn chart).
-Bow-tie, family-group sheet, generation/kinship chart, timeline chart, calendar chart, migration chart ⬜. PDF export ⬜ (SVG/PNG/print only).
+Life-span timeline chart ✅, month calendar ✅, family-group sheet ✅ (as a report). Bow-tie, generation/kinship chart, migration chart ⬜. PDF export ⬜ (SVG/PNG/HTML/print only).
 
 ## F–H. Virtual tree, Maps, Timeline & Calendar
-⬜ Not started. Place engine exists (hierarchy, find-or-create, merge, duplicates — `core/places.rs`); no map UI, geocoding or KML/GeoJSON.
+Timeline (with editable historical overlay), life-span chart, month calendar, birthday/anniversary iCalendar export ✅.
+Virtual tree and Maps ⬜. Place engine exists (hierarchy, find-or-create, merge, duplicates — `core/places.rs`); no map UI, geocoding or KML/GeoJSON.
 
 ## I. Statistics ✅
 All listed measures except "average lifespan by decade" (century only) — `core/stats.rs`, `stats_tests.rs`, E2E drill-down.
 
-## J–L. Reports, Stories, Media ⬜
+## J. Reports 🟡
+Individual summary, ancestor (Ahnentafel), descendant (d'Aboville), family group sheet, family book (continuous footnotes, name index, contents), bibliography ✅. Narrative sentences in English and Turkish from user-editable templates (vowel harmony, gender/plural handling, date precision) ✅; living-person masking/exclusion ✅; footnoted citations ✅; HTML and Markdown output, print to PDF ✅ (`core/report.rs`, `report_tests.rs`, E2E).
+Not done: DOCX/ODT output, Evidence-Explained style, register/NGSQ report, Henry numbering report, outline descendant, surname/place reports, media gallery, birthday-list/to-do/research-log/completeness reports, cover page designer, narrative languages beyond EN/TR.
+
+## K–L. Stories, Media ⬜
 Schema tables exist (`story`, `media`, `media_link`); no UI or generators.
 
-## M. Sources, citations, repositories 🟡
-Data model, GEDCOM round trip and add/remove citation + source on persons ✅. Templates, bibliography, repository UI, "facts without sources" view ⬜ (source coverage % is in Statistics).
+## M. Sources, citations, repositories ✅ (🟡 for extras)
+Full CRUD for sources and repositories, source-type templates (census, BMD records, church book, newspaper, website, book, interview), reliability rating, citation quality/page, bibliography report, "unsourced facts" to-do view, citations in every report ✅. Per-type structured fields (beyond title hints) ⬜.
 
 ## N. Search 🟡
 FTS5 prefix search, Turkish/diacritic folding ✅. Soundex and Cologne phonetics used by duplicate detection (not exposed in search). Double Metaphone, Daitch–Mokotoff, query builder, saved searches ⬜.
@@ -92,7 +103,7 @@ Blood (full/half, multiple routes, pedigree collapse), in-law, step, adoptive; i
 ## Q. Sync, sharing, publishing ⬜
 
 ## R. Productivity & polish
-Dashboard ✅ (home person ⬜) · Onboarding wizard ✅ · Sample projects (30 / 2,000; 100,000 via generator) ✅ · Preferences 🟡 (language, theme, high contrast, text size, naming convention; no shortcut customisation) · Shortcut map + command palette ✅ · Help 🟡 (shortcut sheet only; no searchable manual) · No telemetry ✅.
+Dashboard ✅ (home person ⬜) · Tasks/to-do list ✅ · Onboarding wizard ✅ · Sample projects (30 / 2,000; 100,000 via generator) ✅ · Preferences 🟡 (language, theme, high contrast, text size, naming convention; no shortcut customisation) · Shortcut map + command palette ✅ · Help 🟡 (shortcut sheet only; no searchable manual) · No telemetry ✅.
 
 ## Cross-cutting requirements
 | Requirement | Status |
@@ -104,7 +115,7 @@ Dashboard ✅ (home person ⬜) · Onboarding wizard ✅ · Sample projects (30 
 | GEDCOM import speed | 🟡 100k persons in ≈43 s (linear; optimisation planned) |
 | Accessibility: keyboard, labels, high contrast, scalable text, dark/light | ✅ axe-core scans of every main view (light theme) pass in CI |
 | i18n EN + TR, all strings externalised | ✅ key-coverage test |
-| Core unit-test coverage ≥ 90% | ⬜ not measured (93 Rust tests; coverage tooling not set up) |
+| Core unit-test coverage ≥ 90% | ⬜ not measured (116 Rust tests; coverage tooling not set up) |
 | CI on 3 OSes | 🟡 workflow written; only the Linux run has been executed here |
 | Desktop packaging (.dmg/.msi/AppImage/.deb) | 🟡 Tauri 2 shell source + CI job written; **not built in this environment** (needs system WebView libs) |
 | Canvas/WebGL, Three.js, MapLibre, ONNX face detection, OCR | ⬜ |

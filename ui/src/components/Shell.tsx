@@ -13,7 +13,11 @@ const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
   { view: 'persons', icon: 'people', key: 'nav.persons' },
   { view: 'tree', icon: 'tree', key: 'nav.tree' },
   { view: 'fan', icon: 'fan', key: 'nav.fan' },
+  { view: 'timeline', icon: 'timeline', key: 'nav.timeline' },
+  { view: 'calendar', icon: 'calendar', key: 'nav.calendar' },
   { view: 'relationship', icon: 'link', key: 'nav.relationship' },
+  { view: 'reports', icon: 'file', key: 'nav.reports' },
+  { view: 'library', icon: 'book', key: 'nav.library' },
   { view: 'quality', icon: 'check', key: 'nav.quality' },
   { view: 'statistics', icon: 'chart', key: 'nav.statistics' },
   { view: 'importexport', icon: 'file', key: 'nav.importexport' },
@@ -210,19 +214,7 @@ function PaletteBody() {
   })
   const commands: Cmd[] = useMemo(
     () => [
-      ...(
-        [
-          'dashboard',
-          'persons',
-          'tree',
-          'fan',
-          'relationship',
-          'quality',
-          'statistics',
-          'importexport',
-          'settings',
-        ] as View[]
-      ).map((v) => ({ id: `go-${v}`, label: `${t('palette.go')} ${t(`nav.${v}`)}`, run: () => go(v) })),
+      ...NAV.map((n) => ({ id: `go-${n.view}`, label: `${t('palette.go')} ${t(n.key)}`, run: () => go(n.view) })),
       { id: 'undo', label: t('action.undo'), run: () => void act('history.undo') },
       { id: 'redo', label: t('action.redo'), run: () => void act('history.redo') },
       { id: 'wizard', label: t('wizard.title'), run: () => setWizard(true) },

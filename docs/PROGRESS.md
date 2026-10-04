@@ -58,6 +58,9 @@
 ## Media (done)
 `media.rs` (7 core tests), `media.*` API (1 test), `MediaView` + person Media tab (1 E2E incl. axe). New deps: sha2, image (jpeg/png/gif/webp), kamadak-exif.
 
+## Virtual tree (done)
+Three.js scene with LOD labels, 3 themes, accessible list; lazy-loaded chunk (Map and Virtual tree split from the main bundle).
+
 ## Known issues
 * One E2E test ("tree: changing generations and direction") failed once in a full run and passed in 14 later runs (10 of them under heavy CPU load); cause not identified. CI allows a single retry.
 

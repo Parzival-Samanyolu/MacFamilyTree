@@ -31,7 +31,7 @@ function maplibreWorker(): Plugin {
 export default defineConfig({
   plugins: [react(), tailwindcss(), maplibreWorker()],
   server: { port: 5173, proxy: { '/api': 'http://127.0.0.1:8787' } },
-  build: { chunkSizeWarningLimit: 900 },
+  build: { chunkSizeWarningLimit: 1200 },
   test: {
     environment: 'jsdom',
     globals: true,

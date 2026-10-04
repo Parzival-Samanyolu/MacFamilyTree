@@ -37,7 +37,8 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Repositories, Tasks | ✅ | Library view |
 | Maps | ✅ | `geo_tests.rs`, `api_tests.rs`, E2E |
 | Media | 🟡 | `media_tests.rs`, `api_tests.rs`, E2E |
-| Virtual Tree (3D), Stories | ⬜ | |
+| Virtual Tree (3D) | ✅ | `virtual3d.test.ts`, E2E (WebGL) |
+| Stories | ⬜ | |
 | Sources | ✅ | standalone browser with source-type templates, reliability, repositories |
 | Notes | 🟡 | add/remove notes on a person; no standalone browser |
 | Charts | 🟡 | see E |
@@ -78,7 +79,7 @@ Life-span timeline chart ✅, month calendar ✅, family-group sheet ✅ (as a r
 
 ## F–H. Virtual tree, Maps, Timeline & Calendar
 Timeline (with editable historical overlay), life-span chart, month calendar, birthday/anniversary iCalendar export ✅.
-Virtual tree ⬜.
+Virtual tree ✅ (`VirtualTree.tsx`, `lib/virtual3d.ts`, Three.js): the flat tree layout is lifted into 3D (ancestors rise, descendants hang, deterministic depth jitter), people are instanced spheres coloured by sex, families are junction nodes joined by curved tube branches (line segments above 700 branches), distance-based level of detail for name labels (nearest 90 only), hover tooltip, click to recentre, double-click to open, orbit/zoom/pan, auto-rotate (respects reduced-motion), three themes (garden, night sky, blueprint), reset view, PNG export, and a keyboard-accessible list that flies the camera to a person. Without WebGL the list remains. Not done: seasons/animated growth, per-person leaf textures from photos, VR.
 
 Maps ✅ (`core/geo.rs`, `ui/src/views/MapView.tsx`): MapLibre GL map with markers (clustered, colour by event type), heat map, migration arcs (birth→death) and lineage arcs (parent→child birth), a selected person's route, a from/to year slider with playback, event-type and surname/person filters, living-person hiding, click-to-set coordinates, PNG screenshot, GeoJSON and KML export, and an accessible table alternative. Geocoding: embedded offline gazetteer (262 cities/countries, aliases and Turkish diacritics, country disambiguation), child places inherit the nearest ancestor's coordinates, and opt-in online Nominatim (1 request/s, persistent cache). Base maps: bundled offline world outline (Natural Earth, public domain), OpenStreetMap raster (online, opt-in), or a local PMTiles file (raster or vector). Not provided: historical-border layers (no permissively licensed offline dataset), place-name labels on the offline outline.
 
@@ -125,4 +126,4 @@ Dashboard ✅ (home person ⬜) · Tasks/to-do list ✅ · Onboarding wizard ✅
 | Core unit-test coverage ≥ 90% | ⬜ not measured (116 Rust tests; coverage tooling not set up) |
 | CI on 3 OSes | 🟡 workflow written; only the Linux run has been executed here |
 | Desktop packaging (.dmg/.msi/AppImage/.deb) | 🟡 Tauri 2 shell source + CI job written; **not built in this environment** (needs system WebView libs) |
-| Canvas/WebGL, Three.js, ONNX face detection, OCR | ⬜ |
+| Canvas/WebGL tree renderer for very large 2D trees, ONNX face detection, OCR | ⬜ |

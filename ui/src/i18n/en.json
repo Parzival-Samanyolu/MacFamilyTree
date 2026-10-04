@@ -233,7 +233,8 @@
     "reports": "Reports",
     "library": "Sources & tasks",
     "map": "Map",
-    "media": "Media"
+    "media": "Media",
+    "virtual": "Virtual tree"
   },
   "notes": {
     "add": "Add a note",
@@ -731,5 +732,21 @@
     "uploaded": "{{added}} added, {{duplicates}} already present, {{failed}} failed.",
     "noneForPerson": "No media linked to this person.",
     "profile": "Profile photo"
+  },
+  "virtual": {
+    "aria": "Interactive 3D family tree",
+    "generations": "Generations",
+    "theme": "Theme",
+    "autoRotate": "Auto-rotate",
+    "labels": "Show names",
+    "reset": "Reset view",
+    "noWebgl": "3D graphics are not available on this device. Use the list below to browse the tree.",
+    "hint": "Drag to orbit · scroll to zoom · right-drag to pan · click to centre a person · double-click to open",
+    "listToggle": "Browse as a list ({{count}} people)",
+    "themes": {
+      "garden": "Garden",
+      "night": "Night sky",
+      "blueprint": "Blueprint"
+    }
   }
 }

@@ -369,3 +369,41 @@ test('media: upload, de-duplicate, caption, link, profile photo, slideshow, dele
   const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
   expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
 })
+
+test('virtual tree: WebGL scene renders, themes change the picture, list navigation, screenshot', async ({
+  page,
+  request,
+}) => {
+  await seedFamily(request)
+  await openPerson(page, 'Emre')
+  await nav(page, /Virtual tree/)
+  const canvas = page.getByTestId('virtual-canvas')
+  await expect(canvas).toHaveAttribute('data-ready', '1', { timeout: 20_000 })
+  await expect(canvas).toHaveAttribute('data-nodes', '3')
+  await expect.poll(async () => Number(await canvas.getAttribute('data-labels'))).toBeGreaterThanOrEqual(3)
+  const pixels = () =>
+    page.evaluate(() => {
+      const c = document.querySelector('[data-testid="virtual-canvas"] canvas') as HTMLCanvasElement
+      return c.toDataURL('image/png')
+    })
+  const garden = await pixels()
+  expect(garden.length).toBeGreaterThan(5000)
+  await page.getByTestId('v3-theme').selectOption('night')
+  await expect(canvas).toHaveAttribute('data-theme', 'night')
+  await expect.poll(async () => (await pixels()) !== garden).toBe(true)
+  // keyboard-accessible list flies the camera to a person
+  await page.getByText(/Browse as a list/).click()
+  await page
+    .getByTestId('virtual-list')
+    .getByRole('button', { name: /Ali Kaya/ })
+    .click()
+  await expect(canvas).toHaveAttribute('data-focus', /.+/)
+  const dl = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Save image' }).click()
+  expect((await dl).suggestedFilename()).toBe('kintree-virtual-tree.png')
+  // labels can be switched off
+  await page.getByLabel('Show names').uncheck()
+  await expect.poll(async () => Number(await canvas.getAttribute('data-labels'))).toBe(0)
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+})

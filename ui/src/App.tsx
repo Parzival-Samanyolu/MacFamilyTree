@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { call } from './api/client'
 import { CommandPalette, HelpDialog, Sidebar, StatusBar, Toasts, Toolbar } from './components/Shell'
@@ -19,8 +19,9 @@ import { CalendarView } from './views/Calendar'
 import { Library } from './views/Library'
 import { Reports } from './views/Reports'
 import { Timeline } from './views/Timeline'
-import { MapView } from './views/MapView'
+const MapView = lazy(() => import('./views/MapView').then((m) => ({ default: m.MapView })))
 import { MediaView } from './views/MediaView'
+const VirtualTree = lazy(() => import('./views/VirtualTree').then((m) => ({ default: m.VirtualTree })))
 
 const VIEW_KEYS: View[] = [
   'dashboard',
@@ -30,6 +31,7 @@ const VIEW_KEYS: View[] = [
   'timeline',
   'map',
   'media',
+  'virtual',
   'calendar',
   'relationship',
   'reports',
@@ -37,6 +39,20 @@ const VIEW_KEYS: View[] = [
 ]
 
 function Router() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-10 text-center text-[var(--muted)]" role="status">
+          …
+        </div>
+      }
+    >
+      <RouterInner />
+    </Suspense>
+  )
+}
+
+function RouterInner() {
   const view = useApp((s) => s.view)
   const open = useApp((s) => s.status.open)
   if (!open && view !== 'settings' && view !== 'importexport') return <Dashboard />
@@ -51,6 +67,8 @@ function Router() {
       return <Relationship />
     case 'timeline':
       return <Timeline />
+    case 'virtual':
+      return <VirtualTree />
     case 'media':
       return <MediaView />
     case 'map':

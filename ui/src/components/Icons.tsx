@@ -115,6 +115,11 @@ export const Icons = {
       <circle cx="14" cy="18" r="2" />
     </Svg>
   ),
+  cube: (
+    <Svg>
+      <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5" />
+    </Svg>
+  ),
   image: (
     <Svg>
       <rect x="3" y="4" width="18" height="16" rx="2" />

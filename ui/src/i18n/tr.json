@@ -233,7 +233,8 @@
     "reports": "Raporlar",
     "library": "Kaynaklar ve görevler",
     "map": "Harita",
-    "media": "Ortam"
+    "media": "Ortam",
+    "virtual": "Sanal ağaç"
   },
   "notes": {
     "add": "Not ekle",
@@ -731,5 +732,21 @@
     "uploaded": "{{added}} eklendi, {{duplicates}} zaten vardı, {{failed}} başarısız.",
     "noneForPerson": "Bu kişiye bağlı ortam yok.",
     "profile": "Profil fotoğrafı"
+  },
+  "virtual": {
+    "aria": "Etkileşimli 3B soy ağacı",
+    "generations": "Kuşak",
+    "theme": "Tema",
+    "autoRotate": "Otomatik döndür",
+    "labels": "Adları göster",
+    "reset": "Görünümü sıfırla",
+    "noWebgl": "Bu cihazda 3B grafik kullanılamıyor. Ağacı gezmek için aşağıdaki listeyi kullanın.",
+    "hint": "Döndürmek için sürükleyin · yakınlaştırmak için kaydırın · kaydırmak için sağ tuşla sürükleyin · kişiyi ortalamak için tıklayın · açmak için çift tıklayın",
+    "listToggle": "Liste olarak gez ({{count}} kişi)",
+    "themes": {
+      "garden": "Bahçe",
+      "night": "Gece gökyüzü",
+      "blueprint": "Mavi proje"
+    }
   }
 }

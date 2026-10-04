@@ -8,6 +8,7 @@ export type View =
   | 'fan'
   | 'timeline'
   | 'map'
+  | 'virtual'
   | 'media'
   | 'calendar'
   | 'relationship'

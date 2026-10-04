@@ -456,3 +456,51 @@ test('stories: compose blocks, reorder, preview in English and Turkish, export, 
   await page.getByRole('button', { name: 'Undo' }).first().click()
   await expect(page.getByTestId('story-list').getByRole('button', { name: /Our roots/ })).toBeVisible()
 })
+
+test('archives: website zip, GEDZIP, and an encrypted backup that round-trips', async ({ page, request }) => {
+  await seedFamily(request)
+  await page.goto('/')
+  await nav(page, /Import \/ export/)
+  const grab = async (click: () => Promise<void>) => {
+    const dl = page.waitForEvent('download')
+    await click()
+    const d = await dl
+    return { name: d.suggestedFilename(), data: readFileSync(await d.path()) }
+  }
+  const site = await grab(() => page.getByRole('button', { name: /Export website/ }).click())
+  expect(site.name).toBe('family-website.zip')
+  expect(site.data.subarray(0, 2).toString()).toBe('PK')
+  const gz = await grab(() => page.getByRole('button', { name: 'Export GEDZIP' }).click())
+  expect(gz.name).toBe('family-tree.gdz')
+  expect(gz.data.subarray(0, 2).toString()).toBe('PK')
+
+  const packages = page.getByTestId('packages')
+  const exp = packages.getByRole('button', { name: 'Export encrypted backup' })
+  await expect(exp).toBeDisabled()
+  await packages.getByLabel('Password', { exact: true }).fill('correct horse')
+  await packages.getByLabel('Repeat password').fill('correct horsf')
+  await expect(page.getByText('The passwords do not match.')).toBeVisible()
+  await packages.getByLabel('Repeat password').fill('correct horse')
+  const enc = await grab(() => exp.click())
+  expect(enc.name).toBe('family-tree.ktenc')
+  expect(enc.data.subarray(0, 6).toString()).toBe('KTENC1')
+  expect(enc.data.includes(Buffer.from('Emre'))).toBe(false)
+
+  // wipe the project, then restore from the encrypted file
+  await api(request, 'project.close')
+  await page.goto('/')
+  await nav(page, /Import \/ export/)
+  const dir = mkdtempSync(join(tmpdir(), 'kt-'))
+  const file = join(dir, 'family-tree.ktenc')
+  writeFileSync(file, enc.data)
+  await packages.getByLabel('Password', { exact: true }).fill('wrong password')
+  await page.getByTestId('enc-file').setInputFiles(file)
+  await expect(page.getByText(/wrong password, or the file is damaged/i)).toBeVisible()
+  await packages.getByLabel('Password', { exact: true }).fill('correct horse')
+  await page.getByTestId('enc-file').setInputFiles(file)
+  await nav(page, /People/)
+  await page.getByRole('searchbox').fill('Emre')
+  await expect(rows(page)).toHaveCount(1)
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+})

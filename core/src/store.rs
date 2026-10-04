@@ -329,6 +329,37 @@ impl Store {
         Ok(())
     }
 
+    /// The whole project as a SQLite database image (for encrypted export).
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        let tmp = std::env::temp_dir().join(format!("kintree-{}.db", new_id()));
+        let r = self
+            .backup_to(&tmp)
+            .and_then(|_| std::fs::read(&tmp).map_err(|e| StoreError::Other(e.to_string())));
+        let _ = std::fs::remove_file(&tmp);
+        r
+    }
+
+    /// Load a project from a SQLite image into memory; runs migrations like `open`.
+    pub fn from_bytes(bytes: &[u8]) -> Result<Store> {
+        if !bytes.starts_with(b"SQLite format 3\0") {
+            return Err(StoreError::Other("not a KinTree project file".into()));
+        }
+        let tmp = std::env::temp_dir().join(format!("kintree-{}.db", new_id()));
+        std::fs::write(&tmp, bytes).map_err(|e| StoreError::Other(e.to_string()))?;
+        let result = (|| -> Result<Store> {
+            let src =
+                Connection::open_with_flags(&tmp, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+            let mut dst = Connection::open_in_memory()?;
+            {
+                let b = rusqlite::backup::Backup::new(&src, &mut dst)?;
+                b.run_to_completion(256, std::time::Duration::from_millis(0), None)?;
+            }
+            Store::init(dst)
+        })();
+        let _ = std::fs::remove_file(&tmp);
+        result
+    }
+
     pub fn schema_version(&self) -> i64 {
         self.conn
             .pragma_query_value(None, "user_version", |r| r.get(0))

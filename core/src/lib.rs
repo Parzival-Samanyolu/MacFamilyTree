@@ -1,3 +1,4 @@
+pub mod crypto;
 pub mod date;
 pub mod duplicates;
 pub mod facts;
@@ -8,10 +9,12 @@ pub mod layout;
 pub mod media;
 pub mod model;
 pub mod name;
+pub mod pkg;
 pub mod places;
 pub mod quality;
 pub mod relationship;
 pub mod report;
+pub mod site;
 pub mod stats;
 pub mod store;
 pub mod story;

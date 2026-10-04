@@ -86,6 +86,178 @@ function OtherFormats() {
   )
 }
 
+function Packages() {
+  const { t } = useTranslation()
+  const { status, toast, go } = useApp()
+  const [site, setSite] = useState({ title: '', lang: 'en', privacy: 'exclude' })
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const encRef = useRef<HTMLInputElement>(null)
+  const grab = async (cmd: string, args: Record<string, unknown>, name: string, type: string) => {
+    try {
+      const r = await call<{ data: string; size: number }>(cmd, args)
+      downloadBlob(name, base64ToBytes(r.data) as BlobPart, type)
+      toast(t('export.done', { size: Math.max(1, Math.round(r.size / 1024)) }))
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    }
+  }
+  const openEncrypted = async (f: File | undefined) => {
+    if (!f) return
+    const r = await act('project.import_encrypted', {
+      data: bytesToBase64(new Uint8Array(await f.arrayBuffer())),
+      password: pw,
+    })
+    if (r) {
+      toast(t('packages.opened'))
+      go('dashboard')
+    }
+    if (encRef.current) encRef.current.value = ''
+  }
+  const mismatch = pw !== '' && pw2 !== '' && pw !== pw2
+  return (
+    <section className="card p-4 lg:col-span-2" data-testid="packages">
+      <h2 className="mb-2 text-lg font-semibold">{t('packages.title')}</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <h3 className="mb-1 font-medium">{t('packages.website')}</h3>
+          <p className="mb-2 text-sm text-[var(--muted)]">{t('packages.websiteHint')}</p>
+          <label className="label" htmlFor="site-title">
+            {t('packages.siteTitle')}
+          </label>
+          <input
+            id="site-title"
+            className="input mb-2"
+            value={site.title}
+            onChange={(e) => setSite({ ...site, title: e.target.value })}
+          />
+          <div className="mb-2 grid grid-cols-2 gap-2">
+            <div>
+              <label className="label" htmlFor="site-lang">
+                {t('reports.language')}
+              </label>
+              <select
+                id="site-lang"
+                className="input"
+                value={site.lang}
+                onChange={(e) => setSite({ ...site, lang: e.target.value })}
+              >
+                <option value="en">English</option>
+                <option value="tr">Türkçe</option>
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="site-priv">
+                {t('reports.privacy')}
+              </label>
+              <select
+                id="site-priv"
+                className="input"
+                value={site.privacy}
+                onChange={(e) => setSite({ ...site, privacy: e.target.value })}
+              >
+                <option value="off">{t('reports.privacyOff')}</option>
+                <option value="mask">{t('export.livingMask')}</option>
+                <option value="exclude">{t('export.livingExclude')}</option>
+              </select>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!status.open}
+            onClick={() =>
+              grab(
+                'export.website',
+                { ...site, title: site.title || undefined },
+                'family-website.zip',
+                'application/zip',
+              )
+            }
+          >
+            {t('packages.websiteButton')}
+          </button>
+        </div>
+        <div>
+          <h3 className="mb-1 font-medium">{t('packages.gedzip')}</h3>
+          <p className="mb-2 text-sm text-[var(--muted)]">{t('packages.gedzipHint')}</p>
+          <button
+            type="button"
+            className="btn"
+            disabled={!status.open}
+            onClick={() => grab('export.gedzip', {}, 'family-tree.gdz', 'application/zip')}
+          >
+            {t('packages.gedzipButton')}
+          </button>
+        </div>
+        <div className="md:col-span-2">
+          <h3 className="mb-1 font-medium">{t('packages.encrypted')}</h3>
+          <p className="mb-2 text-sm text-[var(--muted)]">{t('packages.encryptedHint')}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <label className="label" htmlFor="enc-pw">
+                {t('packages.password')}
+              </label>
+              <input
+                id="enc-pw"
+                type="password"
+                autoComplete="new-password"
+                className="input"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="enc-pw2">
+                {t('packages.passwordAgain')}
+              </label>
+              <input
+                id="enc-pw2"
+                type="password"
+                autoComplete="new-password"
+                className="input"
+                value={pw2}
+                onChange={(e) => setPw2(e.target.value)}
+              />
+            </div>
+          </div>
+          {mismatch && (
+            <p role="alert" className="mt-1 text-sm text-[var(--danger)]">
+              {t('packages.mismatch')}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn"
+              disabled={!status.open || !pw || pw !== pw2}
+              onClick={() =>
+                grab('project.export_encrypted', { password: pw }, 'family-tree.ktenc', 'application/octet-stream')
+              }
+            >
+              {t('packages.encryptButton')}
+            </button>
+            <label className={`btn ${pw ? 'cursor-pointer' : 'opacity-50'}`} htmlFor="enc-file">
+              {t('packages.openButton')}
+            </label>
+            <input
+              id="enc-file"
+              ref={encRef}
+              type="file"
+              accept=".ktenc"
+              className="sr-only"
+              disabled={!pw}
+              data-testid="enc-file"
+              onChange={(e) => openEncrypted(e.target.files?.[0])}
+            />
+          </div>
+          <p className="mt-2 text-xs text-[var(--muted)]">{t('packages.warning')}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ProjectFiles() {
   const { t } = useTranslation()
   const { status, toast, go } = useApp()
@@ -206,7 +378,7 @@ export function ImportExport() {
         <input
           ref={fileRef}
           type="file"
-          accept=".ged,.gedcom,text/plain"
+          accept=".ged,.gedcom,.gedzip,.zip,text/plain"
           aria-label={t('import.choose')}
           className="input"
           onChange={(e) => onFile(e.target.files?.[0])}
@@ -314,6 +486,7 @@ export function ImportExport() {
         <p className="mt-3 text-xs text-[var(--muted)]">{t('export.note')}</p>
       </section>
       <OtherFormats />
+      <Packages />
       <ProjectFiles />
     </div>
   )

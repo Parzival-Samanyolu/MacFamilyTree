@@ -1356,3 +1356,83 @@ fn stories_save_render_and_validate() {
     call(&mut s, "story.delete", json!({"id": id}));
     assert_eq!(err(&mut s, "story.get", json!({"id": id})), "not_found");
 }
+
+#[test]
+fn encrypted_backup_website_and_gedzip_via_api() {
+    let mut s = fresh();
+    let p = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Ali", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .clone();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": p, "kind": "BIRT", "date_text": "1850", "place_text": "Konya"}),
+    );
+    call(
+        &mut s,
+        "media.import",
+        json!({"name": "n.txt", "data": B64.encode("hi"), "target_type": "person", "target_id": p}),
+    );
+
+    let enc = call(
+        &mut s,
+        "project.export_encrypted",
+        json!({"password": "pw"}),
+    );
+    assert_eq!(
+        err(&mut s, "project.export_encrypted", json!({"password": ""})),
+        "bad_args"
+    );
+    let mut t = Session::new();
+    assert_eq!(
+        err(
+            &mut t,
+            "project.import_encrypted",
+            json!({"data": enc["data"], "password": "nope"})
+        ),
+        "decrypt"
+    );
+    call(
+        &mut t,
+        "project.import_encrypted",
+        json!({"data": enc["data"], "password": "pw"}),
+    );
+    assert_eq!(
+        call(&mut t, "search", json!({"q": "Kaya"}))
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        call(&mut t, "media.list", json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+
+    let site = call(
+        &mut s,
+        "export.website",
+        json!({"title": "Kaya", "privacy": "off"}),
+    );
+    let files =
+        kintree_core::pkg::read_zip(&B64.decode(site["data"].as_str().unwrap()).unwrap()).unwrap();
+    assert!(files.iter().any(|f| f.0 == "index.html"));
+
+    let gz = call(&mut s, "export.gedzip", json!({}));
+    let mut u = Session::new();
+    let r = call(&mut u, "gedcom.import", json!({"data": gz["data"]}));
+    assert_eq!(r["media"]["media_attached"], 1, "{r}");
+    assert_eq!(
+        call(&mut u, "media.list", json!({"missing": true}))
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+}

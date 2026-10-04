@@ -777,5 +777,24 @@
       "timeline": "Timeline"
     },
     "remove": "Remove block"
+  },
+  "packages": {
+    "title": "Websites, archives and encryption",
+    "website": "Static website",
+    "websiteHint": "A folder of plain HTML pages (one per person, plus a searchable index) that you can host anywhere or open from disk. No scripts are loaded from the internet.",
+    "siteTitle": "Site title",
+    "websiteButton": "Export website (.zip)",
+    "gedzip": "GEDCOM with media (GEDZIP)",
+    "gedzipHint": "GEDCOM plus all embedded photos and documents in one archive. Importing a .gdz / .zip re-attaches the files.",
+    "gedzipButton": "Export GEDZIP",
+    "encrypted": "Encrypted backup",
+    "encryptedHint": "The whole project, including media, protected with a password (Argon2id + ChaCha20-Poly1305).",
+    "password": "Password",
+    "passwordAgain": "Repeat password",
+    "mismatch": "The passwords do not match.",
+    "encryptButton": "Export encrypted backup",
+    "openButton": "Open encrypted backup…",
+    "opened": "Encrypted backup opened.",
+    "warning": "There is no password recovery. If you lose the password, the backup cannot be opened."
   }
 }

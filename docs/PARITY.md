@@ -16,11 +16,11 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Lossless unknown tags | ✅ | `raw_tag` table; 15 clean files re-export tag-for-tag |
 | Character sets UTF-8 / UTF-16 / ANSEL / ASCII / ISO-8859-1 | 🟡 | `gedcom/charset.rs`; ANSEL covers common diacritics and letters, not the full table |
 | Malformed input handled with detailed log | ✅ | torture corpus; `malformed_file_reports_detailed_issues`; E2E import-log test |
-| GEDZIP, CSV, Gramps XML import | ⬜ | |
+| GEDZIP ✅ (media re-attached by file name), CSV ✅, Gramps XML import | 🟡 | `pkg_site_tests.rs` |
 | Export GEDCOM 5.5.1 / 7.0, living privacy, charset | ✅ | `gedcom/export.rs`; `living_privacy_mask_and_exclude`, `gedcom7_export_*` |
 | Target-software dialect | 🟡 | header identification only |
 | Export CSV and JSON | ✅ | `core/tabular.rs`; `timeline_tabular_tests.rs`; E2E CSV test |
-| Export PDF / HTML website | 🟡 | reports export to HTML/Markdown (print → PDF); static website export ⬜ |
+| Export PDF / HTML website | 🟡 | reports export to HTML/Markdown (print → PDF); static website export ✅ (`core/site.rs`: person pages, searchable index, relatives, thumbnails, EN/TR, living-person exclude/mask) |
 | Import CSV persons | ✅ | EN/TR headers, `;` delimiter, families rebuilt from ids |
 | Round-trip ≥ 15 files incl. torture | ✅ | `samples/gedcom/clean` (15) + `torture` (5) |
 | Merge two projects | ⬜ | person/family/place merge exist; whole-project merge does not |
@@ -94,7 +94,7 @@ Not done: DOCX/ODT output, Evidence-Explained style, register/NGSQ report, Henry
 Stories (`core/story.rs`, `Stories.tsx`): ordered blocks – heading, text, quote, person write-up (narrative + events), picture (embedded as data URI), person timeline; autosave, reorder, live sandboxed preview in EN/TR, privacy (living people and their pictures omitted), HTML/Markdown export. Not done: layout themes, slide/presentation mode, embedded maps and charts.
 
 Media (`core/media.rs`, `MediaView`, person *Media* tab) ✅: add files by picker or drag-and-drop (images, documents, audio, video); bytes are embedded in the project file (schema v2 `media_blob`) so backups and copies are self-contained; SHA-256 de-duplication; 320 px JPEG thumbnails with EXIF orientation; EXIF date, camera and GPS parsed, with one-click suggestions (date, nearest known place within 30 km); captions, dates, places; link to persons (also from the person editor), profile photo, unlink; search and type/unlinked/missing filters; slideshow with keyboard and autoplay; relink files for GEDCOM-imported items that only had a path; download original; delete with undo (bytes are kept until `media.purge`).
-Not done: face tagging / regions, OCR, video/audio thumbnails, GEDZIP packaging, folder watching, bulk resize.
+Not done: face tagging / regions, OCR, video/audio thumbnails, folder watching, bulk resize.
 
 ## M. Sources, citations, repositories ✅ (🟡 for extras)
 Full CRUD for sources and repositories, source-type templates (census, BMD records, church book, newspaper, website, book, interview), reliability rating, citation quality/page, bibliography report, "unsourced facts" to-do view, citations in every report ✅. Per-type structured fields (beyond title hints) ⬜.

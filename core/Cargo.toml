@@ -6,7 +6,7 @@ license.workspace = true
 description = "Portable genealogy data model, dates, names, GEDCOM and storage for KinTree"
 
 [dependencies]
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.32", features = ["bundled", "backup"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -15,6 +15,10 @@ unicode-normalization = "0.1"
 sha2 = "0.11.0"
 kamadak-exif = "0.6.1"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+chacha20poly1305 = "0.11.0"
+argon2 = "0.6.0"
+getrandom = "0.4.3"
 
 [dev-dependencies]
 proptest = "1"

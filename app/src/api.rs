@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
+use kintree_core::crypto;
 use kintree_core::date::{GenDate, Locale};
 use kintree_core::duplicates;
 use kintree_core::facts::Facts;
@@ -8,6 +9,7 @@ use kintree_core::kinship_terms::{describe_all, Lang};
 use kintree_core::layout::{self, Direction, Options as LayoutOptions};
 use kintree_core::media;
 use kintree_core::name::{suggest_child_surname, NamingCulture, PersonName, Sex as NSex};
+use kintree_core::pkg;
 use kintree_core::places;
 use kintree_core::quality::{self, Rules};
 use kintree_core::relationship::{
@@ -15,6 +17,7 @@ use kintree_core::relationship::{
     Graph, Kind, Kinship,
 };
 use kintree_core::report::{self, Privacy, ReportLang};
+use kintree_core::site;
 use kintree_core::stats;
 use kintree_core::store::{new_id, Row, Store, StoreError, Tx};
 use kintree_core::story;
@@ -1294,6 +1297,12 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
             if sess.store.is_none() {
                 sess.store = Some(Store::open_memory()?);
             }
+            if bytes.starts_with(b"PK\x03\x04") {
+                let (ged, files) = pkg::split_gedzip(&bytes)?;
+                let r = import_bytes(sess, &ged)?;
+                let m = pkg::attach_media(sess.store_mut()?, &files)?;
+                return Ok(json!({"report": r, "media": m, "status": status(sess)}));
+            }
             let r = import_bytes(sess, &bytes)?;
             Ok(json!({"report": r, "status": status(sess)}))
         }
@@ -2300,6 +2309,35 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
             Ok(json!(out))
         }
         // ---- export / import (tabular) ----
+        "export.gedzip" => {
+            let st = sess.store()?;
+            let bytes = pkg::export_gedzip(st, &export_options(&args))?;
+            Ok(json!({"data": B64.encode(&bytes), "size": bytes.len()}))
+        }
+        "export.website" => {
+            let st = sess.store()?;
+            let o = report_options(st, &args);
+            let title = opt_s(&args, "title").unwrap_or_else(|| "Family tree".into());
+            let files = site::build(st, &title, &o)?;
+            let bytes = pkg::build_zip(&files)?;
+            Ok(json!({"data": B64.encode(&bytes), "size": bytes.len(), "files": files.len()}))
+        }
+        "project.export_encrypted" => {
+            let pw = req(&args, "password")?;
+            let blob = crypto::encrypt(&sess.store()?.to_bytes()?, &pw)
+                .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            Ok(json!({"data": B64.encode(&blob), "size": blob.len()}))
+        }
+        "project.import_encrypted" => {
+            let blob = B64
+                .decode(req(&args, "data")?)
+                .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            let plain = crypto::decrypt(&blob, &req(&args, "password")?)
+                .map_err(|e| ApiError::new("decrypt", e.to_string()))?;
+            sess.store = Some(Store::from_bytes(&plain)?);
+            sess.path = None;
+            Ok(json!({"status": status(sess)}))
+        }
         "export.ical" => {
             let text = timeline::ical(
                 sess.store()?,

@@ -64,6 +64,9 @@ Three.js scene with LOD labels, 3 themes, accessible list; lazy-loaded chunk (Ma
 ## Stories (done)
 `story.rs` (4 tests), API (1 test), `Stories.tsx` (1 E2E incl. axe; the preview iframe is excluded from axe because axe cannot inject into script-less sandboxed frames).
 
+## Archives (done)
+`pkg.rs` (ZIP, GEDZIP), `site.rs` (static website), `crypto.rs` (Argon2id + ChaCha20-Poly1305 encrypted project backups; `Store::to_bytes/from_bytes`). 8 core tests, 1 API test, 1 E2E.
+
 ## Known issues
 * One E2E test ("tree: changing generations and direction") failed once in a full run and passed in 14 later runs (10 of them under heavy CPU load); cause not identified. CI allows a single retry.
 

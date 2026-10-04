@@ -777,5 +777,24 @@
       "timeline": "Zaman çizelgesi"
     },
     "remove": "Bloğu kaldır"
+  },
+  "packages": {
+    "title": "Web siteleri, arşivler ve şifreleme",
+    "website": "Statik web sitesi",
+    "websiteHint": "Her kişi için bir sayfa ve aranabilir bir dizinden oluşan düz HTML sayfaları; her yerde barındırabilir veya diskten açabilirsiniz. İnternetten betik yüklenmez.",
+    "siteTitle": "Site başlığı",
+    "websiteButton": "Web sitesini dışa aktar (.zip)",
+    "gedzip": "Ortamlı GEDCOM (GEDZIP)",
+    "gedzipHint": "GEDCOM ve gömülü tüm fotoğraf ile belgeler tek arşivde. .gdz / .zip içe aktarılınca dosyalar yeniden bağlanır.",
+    "gedzipButton": "GEDZIP dışa aktar",
+    "encrypted": "Şifreli yedek",
+    "encryptedHint": "Ortam dosyaları dahil tüm proje, parolayla korunur (Argon2id + ChaCha20-Poly1305).",
+    "password": "Parola",
+    "passwordAgain": "Parolayı tekrarlayın",
+    "mismatch": "Parolalar eşleşmiyor.",
+    "encryptButton": "Şifreli yedeği dışa aktar",
+    "openButton": "Şifreli yedeği aç…",
+    "opened": "Şifreli yedek açıldı.",
+    "warning": "Parola kurtarma yoktur. Parolayı kaybederseniz yedek açılamaz."
   }
 }

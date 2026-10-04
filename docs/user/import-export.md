@@ -9,3 +9,8 @@
 * **Import people from CSV** – columns are recognised by name in English or Turkish (*Ad*, *Soyad*, *Cinsiyet*, *Doğum Tarihi*, *Doğum Yeri*, *Meslek* …); commas or semicolons; quoted fields; a BOM. If `id`, `father_id`, `mother_id` or `partner_ids` columns are present the families are rebuilt. Rows are never rejected: problems (no name, unreadable date) are listed as warnings and the text is kept.
 * **Project as JSON** – every table of the project in one file, for backups or other tools.
 * **Calendar (.ics)** – see *Timeline and calendar*.
+
+## Websites, archives and encryption
+* **Static website** – a ZIP of plain HTML: an index with search plus one page per person (events, relatives, thumbnails). Choose English or Türkçe and whether living people are excluded, shown as “Living”, or included.
+* **GEDZIP** – a GEDCOM with all embedded photos and documents. Importing a `.gdz`/`.zip` re-attaches the files to the imported media items by file name.
+* **Encrypted backup** – the whole project, media included, protected by a password (Argon2id key derivation, ChaCha20-Poly1305). There is no recovery: keep the password safe.

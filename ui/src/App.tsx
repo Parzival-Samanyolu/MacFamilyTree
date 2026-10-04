@@ -20,6 +20,7 @@ import { Library } from './views/Library'
 import { Reports } from './views/Reports'
 import { Timeline } from './views/Timeline'
 import { MapView } from './views/MapView'
+import { MediaView } from './views/MediaView'
 
 const VIEW_KEYS: View[] = [
   'dashboard',
@@ -28,6 +29,7 @@ const VIEW_KEYS: View[] = [
   'fan',
   'timeline',
   'map',
+  'media',
   'calendar',
   'relationship',
   'reports',
@@ -49,6 +51,8 @@ function Router() {
       return <Relationship />
     case 'timeline':
       return <Timeline />
+    case 'media':
+      return <MediaView />
     case 'map':
       return <MapView />
     case 'calendar':

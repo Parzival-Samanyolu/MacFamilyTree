@@ -100,6 +100,7 @@ export interface PersonDetail {
     bookmarked: boolean
     color: string | null
     ref_no: string | null
+    primary_media?: string | null
     living_override: number | null
     living: boolean
     created: number | null

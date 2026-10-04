@@ -66,7 +66,7 @@ pub const TABLES: &[&str] = &[
     "setting",
 ];
 
-const MIGRATIONS: &[&str] = &[include_str!("schema_v1.sql")];
+const MIGRATIONS: &[&str] = &[include_str!("schema_v1.sql"), include_str!("schema_v2.sql")];
 
 pub struct Store {
     conn: Connection,

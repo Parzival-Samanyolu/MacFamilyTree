@@ -1,7 +1,7 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import * as Menu from '@radix-ui/react-dropdown-menu'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { call } from '../api/client'
 import type { EventItem, NameItem, PersonDetail, Summary } from '../api/types'
@@ -12,6 +12,8 @@ import { Icons } from './Icons'
 import { Modal } from './Modal'
 import { Avatar, PersonChip } from './PersonChip'
 import { PersonPicker } from './PersonPicker'
+import { MediaThumb } from './MediaThumb'
+import { uploadFiles, type MediaItem } from '../lib/media'
 
 const REL_KINDS = ['father', 'mother', 'partner', 'child', 'sibling'] as const
 type RelKind = (typeof REL_KINDS)[number]
@@ -87,7 +89,7 @@ export function PersonEditor({ id }: { id: string }) {
 
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List className="mb-4 flex gap-1 border-b border-[var(--border)]" aria-label={t('person.sections')}>
-          {['overview', 'names', 'events', 'relationships', 'notes'].map((k) => (
+          {['overview', 'names', 'events', 'relationships', 'media', 'notes'].map((k) => (
             <Tabs.Trigger
               key={k}
               value={k}
@@ -109,6 +111,9 @@ export function PersonEditor({ id }: { id: string }) {
         </Tabs.Content>
         <Tabs.Content value="relationships">
           <Relationships d={data} open={open} onAdd={(kind, family_id) => setAddKind({ kind, family_id })} />
+        </Tabs.Content>
+        <Tabs.Content value="media">
+          <PersonMedia id={id} primary={data.person.primary_media ?? null} />
         </Tabs.Content>
         <Tabs.Content value="notes">
           <NotesSources d={data} />
@@ -821,5 +826,63 @@ function NotesSources({ d }: { d: PersonDetail }) {
         </div>
       </section>
     </div>
+  )
+}
+
+function PersonMedia({ id, primary }: { id: string; primary: string | null }) {
+  const { t } = useTranslation()
+  const { go, setMediaFocus } = useApp()
+  const { data: items = [] } = useQuery(q<MediaItem[]>('media.list', { target_type: 'person', target_id: id }))
+  const input = useRef<HTMLInputElement>(null)
+  return (
+    <section className="card p-4" data-testid="person-media">
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="font-semibold">{t('nav.media')}</h2>
+        <input
+          ref={input}
+          type="file"
+          multiple
+          className="sr-only"
+          data-testid="person-media-input"
+          aria-label={t('media.addFiles')}
+          onChange={(e) =>
+            e.target.files &&
+            void uploadFiles([...e.target.files], { type: 'person', id }, t).then(() => act('project.status'))
+          }
+        />
+        <button type="button" className="btn" onClick={() => input.current?.click()}>
+          {t('media.addFiles')}
+        </button>
+      </div>
+      {items.length === 0 && <p className="text-sm text-[var(--muted)]">{t('media.noneForPerson')}</p>}
+      <ul className="flex flex-wrap gap-3">
+        {items.map((m) => (
+          <li key={m.id} className="w-28">
+            <button
+              type="button"
+              className="block overflow-hidden rounded-lg border border-[var(--border)]"
+              onClick={() => (setMediaFocus(m.id), go('media'))}
+              aria-label={m.caption || m.name}
+            >
+              <MediaThumb item={m} size={110} />
+            </button>
+            <div className="truncate text-xs">{m.caption || m.name}</div>
+            {primary === m.id ? (
+              <span className="chip">{t('media.profile')}</span>
+            ) : (
+              m.kind === 'image' && (
+                <button
+                  type="button"
+                  className="text-xs underline"
+                  onClick={() => void act('media.set_primary', { person_id: id, media_id: m.id })}
+                >
+                  {t('media.makeProfile')}
+                </button>
+              )
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

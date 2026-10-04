@@ -232,7 +232,8 @@
     "calendar": "Calendar",
     "reports": "Reports",
     "library": "Sources & tasks",
-    "map": "Map"
+    "map": "Map",
+    "media": "Media"
   },
   "notes": {
     "add": "Add a note",
@@ -423,7 +424,8 @@
     "names": "Names",
     "events": "Events & facts",
     "relationships": "Relationships",
-    "notes": "Notes & sources"
+    "notes": "Notes & sources",
+    "media": "Media"
   },
   "toast": {
     "added": "Added {{name}}",
@@ -687,5 +689,47 @@
       "place": "Place"
     },
     "missing": "{{count}} places without coordinates"
+  },
+  "media": {
+    "addFiles": "Add files",
+    "search": "Search media",
+    "kind": "Media type",
+    "allKinds": "All types",
+    "unlinked": "Not linked to anyone",
+    "missing": "Missing files",
+    "slideshow": "Slideshow",
+    "count": "{{count}} items",
+    "empty": "No media yet. Add photos, documents, audio or video – or drop files here.",
+    "kinds": {
+      "image": "Images",
+      "document": "Documents",
+      "audio": "Audio",
+      "video": "Video",
+      "other": "Other"
+    },
+    "noFile": "This item has no stored file. Use “Attach file” to relink it.",
+    "open": "Open",
+    "caption": "Caption",
+    "date": "Date",
+    "place": "Place",
+    "suggestions": "Suggestions from the photo",
+    "useDate": "Use date {{date}}",
+    "usePlace": "Use place {{place}} ({{km}} km away)",
+    "linkedTo": "Linked to",
+    "noLinks": "Not linked to anything.",
+    "makeProfile": "Make profile photo",
+    "unlink": "Remove link",
+    "linkPerson": "Link to a person",
+    "link": "Link",
+    "relink": "Attach file",
+    "download": "Download",
+    "confirmDelete": "Delete “{{name}}”? You can undo this.",
+    "prev": "Previous",
+    "next": "Next",
+    "play": "Play",
+    "pause": "Pause",
+    "uploaded": "{{added}} added, {{duplicates}} already present, {{failed}} failed.",
+    "noneForPerson": "No media linked to this person.",
+    "profile": "Profile photo"
   }
 }

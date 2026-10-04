@@ -1229,3 +1229,82 @@ fn map_endpoints_geocode_filter_and_export() {
     );
     assert!(call(&mut s, "geo.lookup", json!({"query": "Izmir, Turkey"}))["lat"].is_f64());
 }
+
+#[test]
+fn media_import_dedupe_link_edit_and_undo() {
+    let mut s = fresh();
+    let p = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Ali", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .clone();
+    let png = {
+        let img = image::RgbImage::from_pixel(64, 32, image::Rgb([1, 2, 3]));
+        let mut out = std::io::Cursor::new(Vec::new());
+        img.write_to(&mut out, image::ImageFormat::Png).unwrap();
+        B64.encode(out.into_inner())
+    };
+    let a = call(
+        &mut s,
+        "media.import",
+        json!({"name": "ali.png", "data": png, "target_type": "person", "target_id": p}),
+    );
+    let again = call(
+        &mut s,
+        "media.import",
+        json!({"name": "dup.png", "data": png}),
+    );
+    assert_eq!(again["duplicate"], true);
+    assert_eq!(again["id"], a["id"]);
+    let id = a["id"].clone();
+    let t = call(&mut s, "media.thumb", json!({"id": id}));
+    assert_eq!(t["mime"], "image/jpeg");
+    assert_eq!(
+        call(&mut s, "media.file", json!({"id": id}))["name"],
+        "ali.png"
+    );
+    call(
+        &mut s,
+        "media.update",
+        json!({"id": id, "caption": "Wedding", "date_text": "3 Mar 1950", "place_text": "Konya, Turkey"}),
+    );
+    let g = call(&mut s, "media.get", json!({"id": id}));
+    assert_eq!(g["item"]["caption"], "Wedding");
+    assert_eq!(g["item"]["date"], "3 March 1950");
+    assert_eq!(g["place"], "Konya, Turkey");
+    assert_eq!(g["links"][0]["label"], "Ali Kaya");
+    call(
+        &mut s,
+        "media.set_primary",
+        json!({"person_id": p, "media_id": id}),
+    );
+    assert_eq!(
+        call(&mut s, "person.get", json!({"id": p}))["person"]["primary_media"],
+        id
+    );
+    call(&mut s, "media.delete", json!({"id": id}));
+    assert_eq!(
+        call(&mut s, "media.list", json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+    call(&mut s, "history.undo", json!({}));
+    assert_eq!(
+        call(&mut s, "media.list", json!({"q": "ali"}))
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        err(&mut s, "media.file", json!({"id": "nope"})),
+        "not_found"
+    );
+    assert_eq!(
+        err(&mut s, "media.import", json!({"name": "x", "data": "@@"})),
+        "bad_args"
+    );
+}

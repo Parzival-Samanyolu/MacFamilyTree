@@ -5,6 +5,7 @@ pub mod gedcom;
 pub mod geo;
 pub mod kinship_terms;
 pub mod layout;
+pub mod media;
 pub mod model;
 pub mod name;
 pub mod places;

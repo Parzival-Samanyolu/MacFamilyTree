@@ -232,7 +232,8 @@
     "calendar": "Takvim",
     "reports": "Raporlar",
     "library": "Kaynaklar ve görevler",
-    "map": "Harita"
+    "map": "Harita",
+    "media": "Ortam"
   },
   "notes": {
     "add": "Not ekle",
@@ -423,7 +424,8 @@
     "names": "Adlar",
     "events": "Olaylar ve olgular",
     "relationships": "İlişkiler",
-    "notes": "Notlar ve kaynaklar"
+    "notes": "Notlar ve kaynaklar",
+    "media": "Ortam"
   },
   "toast": {
     "added": "{{name}} eklendi",
@@ -687,5 +689,47 @@
       "place": "Yer"
     },
     "missing": "Koordinatsız {{count}} yer"
+  },
+  "media": {
+    "addFiles": "Dosya ekle",
+    "search": "Ortamda ara",
+    "kind": "Ortam türü",
+    "allKinds": "Tüm türler",
+    "unlinked": "Kimseyle bağlı değil",
+    "missing": "Eksik dosyalar",
+    "slideshow": "Slayt gösterisi",
+    "count": "{{count}} öğe",
+    "empty": "Henüz ortam yok. Fotoğraf, belge, ses veya video ekleyin ya da dosyaları buraya bırakın.",
+    "kinds": {
+      "image": "Görseller",
+      "document": "Belgeler",
+      "audio": "Ses",
+      "video": "Video",
+      "other": "Diğer"
+    },
+    "noFile": "Bu öğenin saklanan dosyası yok. Yeniden bağlamak için “Dosya iliştir”i kullanın.",
+    "open": "Aç",
+    "caption": "Başlık",
+    "date": "Tarih",
+    "place": "Yer",
+    "suggestions": "Fotoğraftan öneriler",
+    "useDate": "{{date}} tarihini kullan",
+    "usePlace": "{{place}} yerini kullan ({{km}} km uzakta)",
+    "linkedTo": "Bağlantılar",
+    "noLinks": "Hiçbir şeye bağlı değil.",
+    "makeProfile": "Profil fotoğrafı yap",
+    "unlink": "Bağlantıyı kaldır",
+    "linkPerson": "Kişiye bağla",
+    "link": "Bağla",
+    "relink": "Dosya iliştir",
+    "download": "İndir",
+    "confirmDelete": "“{{name}}” silinsin mi? Geri alabilirsiniz.",
+    "prev": "Önceki",
+    "next": "Sonraki",
+    "play": "Oynat",
+    "pause": "Duraklat",
+    "uploaded": "{{added}} eklendi, {{duplicates}} zaten vardı, {{failed}} başarısız.",
+    "noneForPerson": "Bu kişiye bağlı ortam yok.",
+    "profile": "Profil fotoğrafı"
   }
 }

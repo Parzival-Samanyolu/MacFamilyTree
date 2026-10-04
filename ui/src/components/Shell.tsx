@@ -15,6 +15,7 @@ const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
   { view: 'fan', icon: 'fan', key: 'nav.fan' },
   { view: 'timeline', icon: 'timeline', key: 'nav.timeline' },
   { view: 'map', icon: 'map', key: 'nav.map' },
+  { view: 'media', icon: 'image', key: 'nav.media' },
   { view: 'calendar', icon: 'calendar', key: 'nav.calendar' },
   { view: 'relationship', icon: 'link', key: 'nav.relationship' },
   { view: 'reports', icon: 'file', key: 'nav.reports' },

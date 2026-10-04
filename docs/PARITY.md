@@ -36,7 +36,8 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Reports | ✅ | see J |
 | Repositories, Tasks | ✅ | Library view |
 | Maps | ✅ | `geo_tests.rs`, `api_tests.rs`, E2E |
-| Virtual Tree (3D), Media, Stories | ⬜ | |
+| Media | 🟡 | `media_tests.rs`, `api_tests.rs`, E2E |
+| Virtual Tree (3D), Stories | ⬜ | |
 | Sources | ✅ | standalone browser with source-type templates, reliability, repositories |
 | Notes | 🟡 | add/remove notes on a person; no standalone browser |
 | Charts | 🟡 | see E |
@@ -49,7 +50,7 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Item | Status | Notes |
 |---|---|---|
 | Tabs: Overview, Names, Events & facts, Relationships, Notes & sources | ✅ | |
-| Tabs: Associations, Media, Tasks, Custom fields, History | ⬜ | associations exist in the data model and GEDCOM `ASSO` |
+| Tabs: Associations, Tasks, Custom fields, History | ⬜ | associations exist in the data model and GEDCOM `ASSO` |
 | Add father / mother / partner / child / sibling with surname rules (patrilineal, patronymic, Spanish double, Turkish, Slavic) | ✅ | `name.rs`; `naming_cultures_for_children`, `blank_surname_means_inherit_not_empty` |
 | Drag-and-drop reorder of events and children | ✅ | partners/media: ⬜ |
 | Autocomplete for places | ✅ | names / occupations / sources: ⬜ |
@@ -88,8 +89,11 @@ All listed measures except "average lifespan by decade" (century only) — `core
 Individual summary, ancestor (Ahnentafel), descendant (d'Aboville), family group sheet, family book (continuous footnotes, name index, contents), bibliography ✅. Narrative sentences in English and Turkish from user-editable templates (vowel harmony, gender/plural handling, date precision) ✅; living-person masking/exclusion ✅; footnoted citations ✅; HTML and Markdown output, print to PDF ✅ (`core/report.rs`, `report_tests.rs`, E2E).
 Not done: DOCX/ODT output, Evidence-Explained style, register/NGSQ report, Henry numbering report, outline descendant, surname/place reports, media gallery, birthday-list/to-do/research-log/completeness reports, cover page designer, narrative languages beyond EN/TR.
 
-## K–L. Stories, Media ⬜
-Schema tables exist (`story`, `media`, `media_link`); no UI or generators.
+## K–L. Stories ⬜, Media 🟡
+Stories: schema table only.
+
+Media (`core/media.rs`, `MediaView`, person *Media* tab) ✅: add files by picker or drag-and-drop (images, documents, audio, video); bytes are embedded in the project file (schema v2 `media_blob`) so backups and copies are self-contained; SHA-256 de-duplication; 320 px JPEG thumbnails with EXIF orientation; EXIF date, camera and GPS parsed, with one-click suggestions (date, nearest known place within 30 km); captions, dates, places; link to persons (also from the person editor), profile photo, unlink; search and type/unlinked/missing filters; slideshow with keyboard and autoplay; relink files for GEDCOM-imported items that only had a path; download original; delete with undo (bytes are kept until `media.purge`).
+Not done: face tagging / regions, OCR, video/audio thumbnails, GEDZIP packaging, folder watching, bulk resize.
 
 ## M. Sources, citations, repositories ✅ (🟡 for extras)
 Full CRUD for sources and repositories, source-type templates (census, BMD records, church book, newspaper, website, book, interview), reliability rating, citation quality/page, bibliography report, "unsourced facts" to-do view, citations in every report ✅. Per-type structured fields (beyond title hints) ⬜.

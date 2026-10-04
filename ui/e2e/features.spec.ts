@@ -298,3 +298,74 @@ test('map: offline geocoding, markers, heat map, migration arcs, time slider, ex
   const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
   expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
 })
+
+// A 2×2 PNG, used as a stand-in photo.
+const PNG_2X2 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR4nGP8z8Dwn4GBgYGJAQoAHxUCAm4qcZgAAAAASUVORK5CYII=',
+  'base64',
+)
+
+test('media: upload, de-duplicate, caption, link, profile photo, slideshow, delete and undo', async ({
+  page,
+  request,
+}) => {
+  await seedFamily(request)
+  await page.goto('/')
+  await nav(page, /Media/)
+  await expect(page.getByText(/No media yet/)).toBeVisible()
+  const input = page.getByTestId('media-file-input')
+  await input.setInputFiles([
+    { name: 'wedding.png', mimeType: 'image/png', buffer: PNG_2X2 },
+    { name: 'same-bytes.png', mimeType: 'image/png', buffer: PNG_2X2 },
+    { name: 'letter.txt', mimeType: 'text/plain', buffer: Buffer.from('Dear Ali,') },
+  ])
+  await expect(page.getByTestId('media-card')).toHaveCount(2)
+  await expect(page.getByTestId('media-card').filter({ hasText: 'wedding.png' })).toBeVisible()
+  // Search + type filter
+  await page.getByRole('searchbox', { name: 'Search media' }).fill('letter')
+  await expect(page.getByTestId('media-card')).toHaveCount(1)
+  await page.getByRole('searchbox', { name: 'Search media' }).fill('')
+  await page.getByRole('combobox', { name: 'Media type' }).selectOption('image')
+  await expect(page.getByTestId('media-card')).toHaveCount(1)
+  // Detail: caption, link to a person, profile photo
+  await page.getByTestId('media-card').click()
+  const dlg = page.getByRole('dialog')
+  await dlg.getByLabel('Caption').fill('Wedding day')
+  await dlg.getByLabel('Caption').blur()
+  await dlg.getByLabel('Link to a person').fill('Emre')
+  await dlg.getByRole('option', { name: /Emre/ }).first().click()
+  await dlg.getByRole('button', { name: 'Link', exact: true }).click()
+  await expect(dlg.getByTestId('media-links')).toContainText('Emre Kaya')
+  await dlg.getByRole('button', { name: 'Make profile photo' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('media-card').first()).toContainText('Wedding day')
+  // The person's Media tab shows it as the profile photo
+  await nav(page, /People/)
+  await page.getByRole('searchbox').fill('Emre')
+  await expect(rows(page)).toHaveCount(1)
+  await rows(page).first().click()
+  await page.getByRole('tab', { name: 'Media' }).click()
+  await expect(page.getByTestId('person-media')).toContainText('Wedding day')
+  await expect(page.getByTestId('person-media')).toContainText('Profile photo')
+  await page
+    .getByTestId('person-media-input')
+    .setInputFiles({ name: 'diary.txt', mimeType: 'text/plain', buffer: Buffer.from('Konya, 1950') })
+  await expect(page.getByTestId('person-media')).toContainText('diary.txt')
+  // Slideshow
+  await nav(page, /Media/)
+  await page.getByRole('button', { name: 'Slideshow' }).click()
+  await expect(page.getByTestId('slideshow')).toBeVisible()
+  await expect(page.getByTestId('slideshow').locator('img')).toBeVisible()
+  await page.getByRole('button', { name: 'Next' }).click()
+  await page.keyboard.press('Escape')
+  // Delete + undo
+  await page.getByRole('combobox', { name: 'Media type' }).selectOption('image')
+  await page.getByTestId('media-card').first().click()
+  page.once('dialog', (d) => void d.accept())
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
+  await expect(page.getByText(/No media yet/)).toBeVisible()
+  await page.getByRole('button', { name: 'Undo' }).first().click()
+  await expect(page.getByTestId('media-card').first()).toBeVisible()
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+})

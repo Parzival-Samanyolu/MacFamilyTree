@@ -8,6 +8,7 @@ export type View =
   | 'fan'
   | 'timeline'
   | 'map'
+  | 'media'
   | 'calendar'
   | 'relationship'
   | 'reports'
@@ -46,6 +47,8 @@ interface AppState {
   helpOpen: boolean
   wizardOpen: boolean
   toasts: Toast[]
+  mediaFocus: string | null
+  setMediaFocus: (id: string | null) => void
   setStatus: (s: Status) => void
   go: (view: View, personId?: string | null) => void
   select: (personId: string | null) => void
@@ -96,6 +99,8 @@ export const useApp = create<AppState>((set, get) => ({
   helpOpen: false,
   wizardOpen: false,
   toasts: [],
+  mediaFocus: null,
+  setMediaFocus: (mediaFocus) => set({ mediaFocus }),
   setStatus: (status) => set({ status }),
   go: (view, personId) => {
     const s = get()

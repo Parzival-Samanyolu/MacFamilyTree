@@ -13,10 +13,10 @@ fn migrations_apply_and_are_idempotent() {
     let p = dir.join("p.db");
     {
         let s = Store::open(&p).unwrap();
-        assert_eq!(s.schema_version(), 1);
+        assert_eq!(s.schema_version(), 2);
     }
     let s = Store::open(&p).unwrap();
-    assert_eq!(s.schema_version(), 1);
+    assert_eq!(s.schema_version(), 2);
 }
 
 #[test]

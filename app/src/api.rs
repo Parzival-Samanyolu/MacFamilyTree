@@ -6,6 +6,7 @@ use kintree_core::gedcom::{self, Charset, Dialect, ExportOptions, LivingPolicy, 
 use kintree_core::geo;
 use kintree_core::kinship_terms::{describe_all, Lang};
 use kintree_core::layout::{self, Direction, Options as LayoutOptions};
+use kintree_core::media;
 use kintree_core::name::{suggest_child_surname, NamingCulture, PersonName, Sex as NSex};
 use kintree_core::places;
 use kintree_core::quality::{self, Rules};
@@ -462,7 +463,7 @@ fn person_detail(store: &Store, id: &str) -> Res {
     let is_living = summary(store, id)?["living"].clone();
     Ok(json!({
         "person": {"id": id, "sex": p["sex"], "is_private": p["is_private"].as_i64() == Some(1), "bookmarked": p["bookmarked"].as_i64() == Some(1),
-                   "color": p["color"], "ref_no": p["ref_no"], "living_override": p["living_override"], "living": is_living, "created": p["created"], "modified": p["modified"]},
+                   "color": p["color"], "ref_no": p["ref_no"], "primary_media": p["primary_media"], "living_override": p["living_override"], "living": is_living, "created": p["created"], "modified": p["modified"]},
         "summary": summary(store, id)?,
         "names": names, "events": events,
         "partner_families": partner_families, "child_families": child_families,
@@ -1736,6 +1737,186 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
             let (k, r) = (req(&args, "keep")?, req(&args, "remove")?);
             sess.store_mut()?
                 .transact("Merge places", |tx| places::merge(tx, &k, &r))?;
+            Ok(json!({"ok": true}))
+        }
+        // ---- media ----
+        "media.import" => {
+            let name = req(&args, "name")?;
+            let bytes = B64
+                .decode(req(&args, "data")?)
+                .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            let link = match (opt_s(&args, "target_type"), opt_s(&args, "target_id")) {
+                (Some(t), Some(i)) => Some((t, i)),
+                _ => None,
+            };
+            let r = media::import(
+                sess.store_mut()?,
+                &name,
+                &bytes,
+                link.as_ref().map(|(t, i)| (t.as_str(), i.as_str())),
+            )?;
+            Ok(json!(r))
+        }
+        "media.list" => {
+            let st = sess.store()?;
+            let f = media::Filter {
+                target: match (opt_s(&args, "target_type"), opt_s(&args, "target_id")) {
+                    (Some(t), Some(i)) => Some((t, i)),
+                    _ => None,
+                },
+                kind: opt_s(&args, "kind"),
+                query: opt_s(&args, "q"),
+                unlinked: b(&args, "unlinked", false),
+                missing: b(&args, "missing", false),
+            };
+            Ok(json!(media::list(st, &f, locale(st))?))
+        }
+        "media.get" => {
+            let st = sess.store()?;
+            let id = req(&args, "id")?;
+            let item = media::list(st, &media::Filter::default(), locale(st))?
+                .into_iter()
+                .find(|m| m["id"] == id.as_str())
+                .ok_or_else(|| ApiError::new("not_found", id.clone()))?;
+            let m = st.rows_where("media", "id", &id)?.remove(0);
+            let names = places::full_names(st)?;
+            let mut links = vec![];
+            for l in media::links(st, &id)? {
+                let (tt, ti) = (rs(&l, "target_type"), rs(&l, "target_id"));
+                let label = match tt.as_str() {
+                    "person" => summary(st, &ti)?["name"].clone(),
+                    "place" => json!(names.get(&ti)),
+                    _ => Value::Null,
+                };
+                links.push(json!({"target_type": tt, "target_id": ti, "label": label}));
+            }
+            Ok(
+                json!({"item": item, "links": links, "place": m["place_id"].as_str().and_then(|p| names.get(p)),
+                      "path": m["path"]}),
+            )
+        }
+        "media.file" => {
+            let id = req(&args, "id")?;
+            match media::file(sess.store()?, &id)? {
+                Some((name, mime, bytes)) => {
+                    Ok(json!({"name": name, "mime": mime, "data": B64.encode(bytes)}))
+                }
+                None => Err(ApiError::new("not_found", "this item has no stored file")),
+            }
+        }
+        "media.thumb" => {
+            let id = req(&args, "id")?;
+            Ok(match media::thumb(sess.store()?, &id) {
+                Some(t) => json!({"mime": "image/jpeg", "data": B64.encode(t)}),
+                None => Value::Null,
+            })
+        }
+        "media.update" => {
+            let id = req(&args, "id")?;
+            sess.store_mut()?.transact("Edit media", |tx| {
+                let mut r = tx
+                    .get("media", &id)?
+                    .ok_or_else(|| StoreError::Other(format!("no media {id}")))?;
+                if args.get("caption").is_some() {
+                    r.insert("caption".into(), nullable(s(&args, "caption")));
+                }
+                if args.get("date_text").is_some() {
+                    match s(&args, "date_text").and_then(|t| GenDate::parse_lenient(&t)) {
+                        Some(d) => r.insert("date_json".into(), serde_json::to_string(&d)?.into()),
+                        None => r.insert("date_json".into(), Value::Null),
+                    };
+                }
+                if args.get("place_text").is_some() {
+                    let pid = match s(&args, "place_text") {
+                        Some(t) if !t.trim().is_empty() => places::find_or_create(tx, &t)?,
+                        _ => None,
+                    };
+                    r.insert(
+                        "place_id".into(),
+                        pid.map(Value::from).unwrap_or(Value::Null),
+                    );
+                }
+                tx.put_row("media", r)?;
+                Ok(())
+            })?;
+            Ok(json!({"ok": true}))
+        }
+        "media.link" => {
+            media::link(
+                sess.store_mut()?,
+                &req(&args, "id")?,
+                &req(&args, "target_type")?,
+                &req(&args, "target_id")?,
+            )?;
+            Ok(json!({"ok": true}))
+        }
+        "media.unlink" => {
+            media::unlink(
+                sess.store_mut()?,
+                &req(&args, "id")?,
+                &req(&args, "target_type")?,
+                &req(&args, "target_id")?,
+            )?;
+            Ok(json!({"ok": true}))
+        }
+        "media.delete" => {
+            media::delete(sess.store_mut()?, &req(&args, "id")?)?;
+            Ok(json!({"ok": true}))
+        }
+        "media.relink" => {
+            let bytes = B64
+                .decode(req(&args, "data")?)
+                .map_err(|e| ApiError::new("bad_args", e.to_string()))?;
+            media::relink(
+                sess.store_mut()?,
+                &req(&args, "id")?,
+                &req(&args, "name")?,
+                &bytes,
+            )?;
+            Ok(json!({"ok": true}))
+        }
+        "media.purge" => Ok(json!({"removed": media::purge_orphans(sess.store()?)?})),
+        "media.suggest" => Ok(media::suggest(
+            sess.store()?,
+            &req(&args, "id")?,
+            args.get("radius_km")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(30.0),
+        )?),
+        "media.duplicates" => Ok(json!(media::duplicate_groups(sess.store()?)?)),
+        "media.set_primary" => {
+            let pid = req(&args, "person_id")?;
+            let mid = opt_s(&args, "media_id");
+            sess.store_mut()?.transact("Set profile photo", |tx| {
+                let mut p = tx
+                    .get("person", &pid)?
+                    .ok_or_else(|| StoreError::Other(format!("no person {pid}")))?;
+                p.insert("primary_media".into(), nullable(mid.clone()));
+                tx.put_row("person", p)?;
+                if let Some(m) = &mid {
+                    let linked = tx
+                        .ids_where("media_link", "media_id", m)?
+                        .into_iter()
+                        .any(|l| {
+                            tx.get("media_link", &l)
+                                .ok()
+                                .flatten()
+                                .map(|r| {
+                                    r["target_type"] == "person" && r["target_id"] == pid.as_str()
+                                })
+                                .unwrap_or(false)
+                        });
+                    if !linked {
+                        let mut r = Row::new();
+                        r.insert("id".into(), new_id().into());
+                        r.insert("media_id".into(), m.clone().into());
+                        r.insert("target_type".into(), "person".into());
+                        r.insert("target_id".into(), pid.clone().into());
+                        tx.put_row("media_link", r)?;
+                    }
+                }
+                Ok(())
+            })?;
             Ok(json!({"ok": true}))
         }
         "place.set_coords" => {

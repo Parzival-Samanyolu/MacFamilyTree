@@ -4,9 +4,12 @@ A private, offline, open-source family-tree application: a portable **Rust core*
 GEDCOM, relationships, data-quality tools, SQLite storage with unlimited undo) and a **React UI** that talks to it through
 one JSON command interface. KinTree is original work and is not affiliated with any commercial genealogy product.
 
-> **Status: early but working.** People, events, relationships, GEDCOM and CSV import/export, the interactive tree, fan chart,
-> relationship calculator, statistics, data-quality tools, reports (English/Turkish narrative), timeline, calendar, sources and
-> tasks work and are tested end to end. Maps, media, stories, the 3D tree, sync and encryption are **not built yet** – see [docs/PARITY.md](docs/PARITY.md) for the exact state.
+> **Status: feature-rich, verified on Linux.** People, events, relationships, GEDCOM / GEDZIP / Gramps / CSV import and export, the
+> interactive tree, fan chart, **3D virtual tree**, **maps** (offline gazetteer, heat map, migration, PMTiles), **media library**,
+> **stories**, reports (English/Turkish narrative, numbered lists), timeline, calendar, advanced search, find & replace, data-quality
+> tools, static website export and password-encrypted backups work and are tested end to end (core line coverage 93%).
+> Not done: live sync/sharing, at-rest project encryption, face tagging/OCR, the desktop bundle on macOS/Windows is unverified –
+> see [docs/PARITY.md](docs/PARITY.md) for the exact state.
 
 ## Try it
 ```bash

@@ -3,6 +3,7 @@ use kintree_core::date::{GenDate, Locale};
 use kintree_core::duplicates;
 use kintree_core::facts::Facts;
 use kintree_core::gedcom::{self, Charset, Dialect, ExportOptions, LivingPolicy, Version};
+use kintree_core::geo;
 use kintree_core::kinship_terms::{describe_all, Lang};
 use kintree_core::layout::{self, Direction, Options as LayoutOptions};
 use kintree_core::name::{suggest_child_surname, NamingCulture, PersonName, Sex as NSex};
@@ -125,6 +126,33 @@ fn current_year() -> i32 {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     (1970.0 + secs as f64 / 31_556_952.0) as i32
+}
+
+fn geo_filter(args: &Value) -> geo::Filter {
+    geo::Filter {
+        kinds: args
+            .get("kinds")
+            .and_then(|v| v.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|x| x.as_str().map(String::from))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        year_from: args
+            .get("year_from")
+            .and_then(|v| v.as_i64())
+            .map(|v| v as i32),
+        year_to: args
+            .get("year_to")
+            .and_then(|v| v.as_i64())
+            .map(|v| v as i32),
+        person: opt_s(args, "person"),
+        surname: opt_s(args, "surname"),
+        hide_living: b(args, "hide_living", true),
+        current_year: current_year(),
+        living_years: u(args, "living_years", 110) as i32,
+    }
 }
 
 // ---------- shared JSON builders ----------
@@ -1709,6 +1737,77 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
             sess.store_mut()?
                 .transact("Merge places", |tx| places::merge(tx, &k, &r))?;
             Ok(json!({"ok": true}))
+        }
+        "place.set_coords" => {
+            let id = req(&args, "id")?;
+            let lat = args.get("lat").and_then(|v| v.as_f64());
+            let lon = args.get("lon").and_then(|v| v.as_f64());
+            if let (Some(a), Some(o)) = (lat, lon) {
+                if !geo::valid_coords(a, o) {
+                    return Err(ApiError::new("bad_args", "coordinates out of range"));
+                }
+            } else if lat.is_some() != lon.is_some() {
+                return Err(ApiError::new("bad_args", "lat and lon go together"));
+            }
+            let status = opt_s(&args, "status").unwrap_or_else(|| "manual".into());
+            sess.store_mut()?.transact("Set place coordinates", |tx| {
+                let mut r = tx
+                    .get("place", &id)?
+                    .ok_or_else(|| StoreError::Other(format!("no place {id}")))?;
+                r.insert("lat".into(), lat.map(Value::from).unwrap_or(Value::Null));
+                r.insert("lon".into(), lon.map(Value::from).unwrap_or(Value::Null));
+                r.insert(
+                    "geocode_status".into(),
+                    if lat.is_some() {
+                        json!(status)
+                    } else {
+                        Value::Null
+                    },
+                );
+                tx.put_row("place", r)?;
+                Ok(())
+            })?;
+            Ok(json!({"ok": true}))
+        }
+        "geo.offline" => {
+            let st = sess.store_mut()?;
+            let names = places::full_names(st)?;
+            let rep = st.transact("Geocode places (offline)", |tx| {
+                geo::geocode_offline(tx, &names)
+            })?;
+            Ok(json!(rep))
+        }
+        "geo.lookup" => {
+            let q = req(&args, "query")?;
+            let parts = places::split_place(&q);
+            Ok(match geo::Gazetteer::embedded().lookup(&parts) {
+                Some((lat, lon, _)) => json!({"lat": lat, "lon": lon}),
+                None => Value::Null,
+            })
+        }
+        "map.points" => Ok(json!(geo::points(sess.store()?, &geo_filter(&args))?)),
+        "map.route" => Ok(json!(geo::route(
+            sess.store()?,
+            &req(&args, "person")?,
+            &geo_filter(&args)
+        )?)),
+        "map.heat" => Ok(json!(geo::heat(sess.store()?, &geo_filter(&args))?)),
+        "map.arcs" => Ok(json!(geo::arcs(
+            sess.store()?,
+            &geo_filter(&args),
+            b(&args, "generations", false)
+        )?)),
+        "map.export" => {
+            let pts = geo::points(sess.store()?, &geo_filter(&args))?;
+            let (text, ext) = if s(&args, "format").as_deref() == Some("kml") {
+                (geo::to_kml(&pts, "KinTree"), "kml")
+            } else {
+                (
+                    serde_json::to_string_pretty(&geo::to_geojson(&pts))?,
+                    "geojson",
+                )
+            };
+            Ok(json!({"data": B64.encode(text.as_bytes()), "size": text.len(), "ext": ext}))
         }
         "place.duplicates" => Ok(json!(places::find_duplicate_places(sess.store()?)?)),
         // ---- generic records ----

@@ -52,6 +52,9 @@
 6. Verify the Tauri bundle on macOS/Windows/Linux; add native file dialogs.
 7. Coverage tooling and the ≥ 90% core coverage gate.
 
+## Maps (done)
+`geo.rs` + `MapView` with tests (7 core, 1 API, 1 E2E incl. axe). Natural Earth 110m countries (public domain) bundled as the offline base map.
+
 ## Known issues
 * One E2E test ("tree: changing generations and direction") failed once in a full run and passed in 14 later runs (10 of them under heavy CPU load); cause not identified. CI allows a single retry.
 

@@ -1156,3 +1156,76 @@ fn library_unsourced_facts_tasks_and_bibliography() {
     );
     assert!(md.contains("*Birth certificate*. (1 citation)"), "{md}");
 }
+
+#[test]
+fn map_endpoints_geocode_filter_and_export() {
+    let mut s = Session::new();
+    let ged = "0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Ali /Kaya/\n1 BIRT\n2 DATE 1800\n2 PLAC Konya, Turkey\n1 DEAT\n2 DATE 1870\n2 PLAC Ankara, Turkey\n0 @I2@ INDI\n1 NAME Zed /Living/\n1 BIRT\n2 DATE 2000\n2 PLAC Adana, Turkey\n0 TRLR\n";
+    call(&mut s, "gedcom.import", json!({"data": B64.encode(ged)}));
+    assert_eq!(
+        call(&mut s, "map.points", json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+    let rep = call(&mut s, "geo.offline", json!({}));
+    assert!(rep["geocoded"].as_i64().unwrap() >= 3, "{rep}");
+    let pts = call(&mut s, "map.points", json!({}));
+    assert_eq!(
+        pts.as_array().unwrap().len(),
+        2,
+        "living person hidden by default"
+    );
+    let all = call(&mut s, "map.points", json!({"hide_living": false}));
+    assert_eq!(all.as_array().unwrap().len(), 3);
+    assert_eq!(
+        call(&mut s, "map.arcs", json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        call(&mut s, "map.heat", json!({}))
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    let kml = call(&mut s, "map.export", json!({"format": "kml"}));
+    assert_eq!(kml["ext"], "kml");
+
+    let places = call(&mut s, "place.list", json!({}));
+    let konya = places
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "Konya")
+        .unwrap()["id"]
+        .clone();
+    assert_eq!(
+        err(
+            &mut s,
+            "place.set_coords",
+            json!({"id": konya, "lat": 123.0, "lon": 1.0})
+        ),
+        "bad_args"
+    );
+    call(
+        &mut s,
+        "place.set_coords",
+        json!({"id": konya, "lat": 10.5, "lon": 20.5}),
+    );
+    let pts = call(&mut s, "map.points", json!({"kinds": ["BIRT"]}));
+    assert_eq!(pts[0]["lat"], 10.5);
+    call(&mut s, "place.set_coords", json!({"id": konya}));
+    let pts = call(&mut s, "map.points", json!({"kinds": ["BIRT"]}));
+    assert_eq!(pts[0]["inherited"], true, "falls back to the country");
+    call(&mut s, "history.undo", json!({}));
+    assert_eq!(
+        call(&mut s, "map.points", json!({"kinds": ["BIRT"]}))[0]["lat"],
+        10.5
+    );
+    assert!(call(&mut s, "geo.lookup", json!({"query": "Izmir, Turkey"}))["lat"].is_f64());
+}

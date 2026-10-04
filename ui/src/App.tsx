@@ -19,6 +19,7 @@ import { CalendarView } from './views/Calendar'
 import { Library } from './views/Library'
 import { Reports } from './views/Reports'
 import { Timeline } from './views/Timeline'
+import { MapView } from './views/MapView'
 
 const VIEW_KEYS: View[] = [
   'dashboard',
@@ -26,6 +27,7 @@ const VIEW_KEYS: View[] = [
   'tree',
   'fan',
   'timeline',
+  'map',
   'calendar',
   'relationship',
   'reports',
@@ -47,6 +49,8 @@ function Router() {
       return <Relationship />
     case 'timeline':
       return <Timeline />
+    case 'map':
+      return <MapView />
     case 'calendar':
       return <CalendarView />
     case 'reports':

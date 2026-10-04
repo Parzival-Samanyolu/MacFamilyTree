@@ -1,0 +1,263 @@
+kind,name,country,lat,lon,aliases
+city,Adana,Turkey,37.00,35.32,
+city,Adıyaman,Turkey,37.76,38.28,
+city,Afyonkarahisar,Turkey,38.76,30.54,Afyon
+city,Ağrı,Turkey,39.72,43.05,
+city,Aksaray,Turkey,38.37,34.03,
+city,Amasya,Turkey,40.65,35.83,
+city,Ankara,Turkey,39.93,32.86,Angora
+city,Antalya,Turkey,36.90,30.70,Adalia
+city,Ardahan,Turkey,41.11,42.70,
+city,Artvin,Turkey,41.18,41.82,
+city,Aydın,Turkey,37.85,27.84,
+city,Balıkesir,Turkey,39.65,27.89,
+city,Bartın,Turkey,41.64,32.34,
+city,Batman,Turkey,37.88,41.13,
+city,Bayburt,Turkey,40.26,40.23,
+city,Bilecik,Turkey,40.15,29.98,
+city,Bingöl,Turkey,38.88,40.50,
+city,Bitlis,Turkey,38.40,42.11,
+city,Bolu,Turkey,40.74,31.61,
+city,Burdur,Turkey,37.72,30.29,
+city,Bursa,Turkey,40.18,29.07,Brusa
+city,Çanakkale,Turkey,40.15,26.41,Dardanelles
+city,Çankırı,Turkey,40.60,33.62,
+city,Çorum,Turkey,40.55,34.95,
+city,Denizli,Turkey,37.78,29.09,
+city,Diyarbakır,Turkey,37.91,40.24,Diyarbekir;Amid
+city,Düzce,Turkey,40.84,31.16,
+city,Edirne,Turkey,41.68,26.56,Adrianople
+city,Elazığ,Turkey,38.67,39.22,Harput
+city,Erzincan,Turkey,39.75,39.49,
+city,Erzurum,Turkey,39.90,41.27,Erzerum
+city,Eskişehir,Turkey,39.78,30.52,
+city,Gaziantep,Turkey,37.07,37.38,Antep;Aintab
+city,Giresun,Turkey,40.91,38.39,
+city,Gümüşhane,Turkey,40.46,39.48,
+city,Hakkâri,Turkey,37.58,43.74,Hakkari
+city,Hatay,Turkey,36.40,36.35,
+city,Antakya,Turkey,36.20,36.16,Antioch
+city,Iğdır,Turkey,39.92,44.05,
+city,Isparta,Turkey,37.76,30.55,
+city,İstanbul,Turkey,41.01,28.98,Istanbul;Constantinople;Konstantinopel;Stamboul;Istanbul
+city,İzmir,Turkey,38.42,27.14,Izmir;Smyrna
+city,Kahramanmaraş,Turkey,37.58,36.94,Maraş;Marash
+city,Karabük,Turkey,41.20,32.63,
+city,Karaman,Turkey,37.18,33.23,
+city,Kars,Turkey,40.60,43.10,
+city,Kastamonu,Turkey,41.38,33.78,
+city,Kayseri,Turkey,38.73,35.48,Caesarea
+city,Kırıkkale,Turkey,39.85,33.52,
+city,Kırklareli,Turkey,41.74,27.22,
+city,Kırşehir,Turkey,39.15,34.17,
+city,Kilis,Turkey,36.72,37.12,
+city,Kocaeli,Turkey,40.77,29.94,İzmit;Izmit;Nicomedia
+city,Konya,Turkey,37.87,32.49,Iconium
+city,Kütahya,Turkey,39.42,29.98,
+city,Malatya,Turkey,38.35,38.31,
+city,Manisa,Turkey,38.61,27.43,Magnesia
+city,Mardin,Turkey,37.31,40.74,
+city,Mersin,Turkey,36.80,34.64,İçel;Icel
+city,Muğla,Turkey,37.22,28.36,
+city,Muş,Turkey,38.74,41.51,
+city,Nevşehir,Turkey,38.62,34.72,
+city,Niğde,Turkey,37.97,34.68,
+city,Ordu,Turkey,40.98,37.88,
+city,Osmaniye,Turkey,37.07,36.25,
+city,Rize,Turkey,41.02,40.52,
+city,Sakarya,Turkey,40.78,30.40,Adapazarı
+city,Samsun,Turkey,41.29,36.33,
+city,Siirt,Turkey,37.93,41.94,
+city,Sinop,Turkey,42.03,35.15,
+city,Sivas,Turkey,39.75,37.02,Sebaste
+city,Şanlıurfa,Turkey,37.16,38.79,Urfa;Sanliurfa;Edessa
+city,Şırnak,Turkey,37.52,42.46,
+city,Tekirdağ,Turkey,40.98,27.51,Rodosto
+city,Tokat,Turkey,40.31,36.55,
+city,Trabzon,Turkey,41.00,39.72,Trebizond;Trapezunt
+city,Tunceli,Turkey,39.11,39.55,Dersim
+city,Uşak,Turkey,38.68,29.41,
+city,Van,Turkey,38.49,43.38,
+city,Yalova,Turkey,40.65,29.27,
+city,Yozgat,Turkey,39.82,34.80,
+city,Zonguldak,Turkey,41.45,31.80,
+city,Bodrum,Turkey,37.04,27.43,
+city,Alanya,Turkey,36.54,32.00,
+city,Fethiye,Turkey,36.62,29.12,
+city,Safranbolu,Turkey,41.25,32.69,
+city,Gelibolu,Turkey,40.41,26.67,Gallipoli
+city,Ayvalık,Turkey,39.32,26.69,
+city,Çeşme,Turkey,38.32,26.30,
+city,Kuşadası,Turkey,37.86,27.26,
+city,Tarsus,Turkey,36.92,34.89,
+city,London,United Kingdom,51.51,-0.13,
+city,Paris,France,48.86,2.35,
+city,Berlin,Germany,52.52,13.40,
+city,Madrid,Spain,40.42,-3.70,
+city,Rome,Italy,41.90,12.50,Roma
+city,Vienna,Austria,48.21,16.37,Wien
+city,Moscow,Russia,55.76,37.62,Moskva
+city,Saint Petersburg,Russia,59.93,30.34,St Petersburg;Leningrad;Petrograd
+city,Warsaw,Poland,52.23,21.01,Warszawa
+city,Prague,Czechia,50.08,14.44,Praha
+city,Budapest,Hungary,47.50,19.04,
+city,Athens,Greece,37.98,23.73,Athina
+city,Thessaloniki,Greece,40.64,22.94,Salonica;Selanik;Saloniki
+city,Lisbon,Portugal,38.72,-9.14,Lisboa
+city,Dublin,Ireland,53.35,-6.26,
+city,Amsterdam,Netherlands,52.37,4.90,
+city,Brussels,Belgium,50.85,4.35,
+city,Copenhagen,Denmark,55.68,12.57,
+city,Stockholm,Sweden,59.33,18.07,
+city,Oslo,Norway,59.91,10.75,
+city,Helsinki,Finland,60.17,24.94,
+city,Reykjavik,Iceland,64.15,-21.94,
+city,Bern,Switzerland,46.95,7.45,
+city,Zurich,Switzerland,47.37,8.54,
+city,Munich,Germany,48.14,11.58,München
+city,Hamburg,Germany,53.55,9.99,
+city,Cologne,Germany,50.94,6.96,Köln
+city,Frankfurt,Germany,50.11,8.68,
+city,Sofia,Bulgaria,42.70,23.32,
+city,Bucharest,Romania,44.43,26.10,
+city,Belgrade,Serbia,44.79,20.45,
+city,Zagreb,Croatia,45.81,15.98,
+city,Sarajevo,Bosnia and Herzegovina,43.86,18.41,
+city,Skopje,North Macedonia,41.99,21.43,Üsküp
+city,Tirana,Albania,41.33,19.82,
+city,Kyiv,Ukraine,50.45,30.52,Kiev
+city,Minsk,Belarus,53.90,27.57,
+city,Riga,Latvia,56.95,24.11,
+city,Tallinn,Estonia,59.44,24.75,
+city,Vilnius,Lithuania,54.69,25.28,
+city,Tbilisi,Georgia,41.72,44.79,Tiflis
+city,Yerevan,Armenia,40.18,44.51,Erivan
+city,Baku,Azerbaijan,40.41,49.87,
+city,Nicosia,Cyprus,35.19,33.38,Lefkoşa
+city,Beirut,Lebanon,33.89,35.50,Beyrut
+city,Damascus,Syria,33.51,36.29,Şam;Dimashq
+city,Aleppo,Syria,36.20,37.16,Halep
+city,Baghdad,Iraq,33.31,44.37,Bağdat
+city,Tehran,Iran,35.69,51.39,
+city,Jerusalem,Israel,31.77,35.22,Kudüs
+city,Tel Aviv,Israel,32.09,34.78,
+city,Amman,Jordan,31.95,35.93,
+city,Cairo,Egypt,30.04,31.24,Kahire
+city,Alexandria,Egypt,31.20,29.92,İskenderiye
+city,Riyadh,Saudi Arabia,24.71,46.68,
+city,Mecca,Saudi Arabia,21.39,39.86,Mekke
+city,Medina,Saudi Arabia,24.47,39.61,Medine
+city,Tunis,Tunisia,36.81,10.18,
+city,Algiers,Algeria,36.75,3.06,
+city,Casablanca,Morocco,33.57,-7.59,
+city,Tripoli,Libya,32.89,13.19,Trablus
+city,Kabul,Afghanistan,34.53,69.17,
+city,Karachi,Pakistan,24.86,67.01,
+city,Delhi,India,28.61,77.21,
+city,Mumbai,India,19.08,72.88,Bombay
+city,Dhaka,Bangladesh,23.81,90.41,
+city,Beijing,China,39.90,116.41,Peking
+city,Shanghai,China,31.23,121.47,
+city,Tokyo,Japan,35.68,139.65,
+city,Seoul,South Korea,37.57,126.98,
+city,Bangkok,Thailand,13.76,100.50,
+city,Singapore,Singapore,1.35,103.82,
+city,Jakarta,Indonesia,-6.21,106.85,
+city,Sydney,Australia,-33.87,151.21,
+city,Melbourne,Australia,-37.81,144.96,
+city,Auckland,New Zealand,-36.85,174.76,
+city,New York,United States,40.71,-74.01,NYC;New York City
+city,Boston,United States,42.36,-71.06,
+city,Philadelphia,United States,39.95,-75.17,
+city,Chicago,United States,41.88,-87.63,
+city,Los Angeles,United States,34.05,-118.24,
+city,San Francisco,United States,37.77,-122.42,
+city,Washington,United States,38.91,-77.04,Washington DC
+city,New Orleans,United States,29.95,-90.07,
+city,Toronto,Canada,43.65,-79.38,
+city,Montreal,Canada,45.50,-73.57,
+city,Vancouver,Canada,49.28,-123.12,
+city,Mexico City,Mexico,19.43,-99.13,
+city,Havana,Cuba,23.11,-82.37,
+city,Buenos Aires,Argentina,-34.60,-58.38,
+city,Sao Paulo,Brazil,-23.55,-46.63,São Paulo
+city,Rio de Janeiro,Brazil,-22.91,-43.17,
+city,Santiago,Chile,-33.45,-70.67,
+city,Lima,Peru,-12.05,-77.04,
+city,Bogota,Colombia,4.71,-74.07,
+city,Johannesburg,South Africa,-26.20,28.05,
+city,Cape Town,South Africa,-33.92,18.42,
+city,Lagos,Nigeria,6.52,3.38,
+city,Nairobi,Kenya,-1.29,36.82,
+city,Addis Ababa,Ethiopia,9.03,38.74,
+country,Turkey,Turkey,39.0,35.0,Türkiye;Turkiye;Ottoman Empire;Osmanlı
+country,Germany,Germany,51.0,10.0,Deutschland;Almanya
+country,France,France,46.6,2.2,Fransa
+country,United Kingdom,United Kingdom,54.0,-2.0,UK;Great Britain;Britain;England;Scotland;Wales;İngiltere
+country,Ireland,Ireland,53.4,-8.0,Irlanda
+country,Spain,Spain,40.2,-3.7,España;İspanya
+country,Portugal,Portugal,39.6,-8.0,Portekiz
+country,Italy,Italy,42.8,12.8,Italia;İtalya
+country,Greece,Greece,39.0,22.0,Hellas;Yunanistan
+country,Bulgaria,Bulgaria,42.7,25.5,Bulgaristan
+country,Romania,Romania,45.9,25.0,Romanya
+country,Hungary,Hungary,47.2,19.5,Macaristan
+country,Austria,Austria,47.5,14.5,Österreich;Avusturya
+country,Switzerland,Switzerland,46.8,8.2,İsviçre
+country,Netherlands,Netherlands,52.2,5.3,Holland;Hollanda
+country,Belgium,Belgium,50.6,4.7,Belçika
+country,Poland,Poland,52.0,19.4,Polska;Polonya
+country,Czechia,Czechia,49.8,15.5,Czech Republic;Çekya
+country,Slovakia,Slovakia,48.7,19.5,
+country,Serbia,Serbia,44.0,21.0,Sırbistan
+country,Croatia,Croatia,45.1,15.2,Hırvatistan
+country,Bosnia and Herzegovina,Bosnia and Herzegovina,44.0,17.8,Bosnia;Bosna Hersek
+country,Albania,Albania,41.1,20.1,Arnavutluk
+country,North Macedonia,North Macedonia,41.6,21.7,Macedonia;Makedonya
+country,Kosovo,Kosovo,42.6,20.9,Kosova
+country,Montenegro,Montenegro,42.7,19.4,Karadağ
+country,Slovenia,Slovenia,46.1,14.8,
+country,Ukraine,Ukraine,49.0,32.0,Ukrayna
+country,Russia,Russia,61.5,105.0,Rusya
+country,Belarus,Belarus,53.7,27.9,
+country,Lithuania,Lithuania,55.3,23.9,
+country,Latvia,Latvia,56.9,24.9,
+country,Estonia,Estonia,58.7,25.5,
+country,Moldova,Moldova,47.4,28.4,
+country,Finland,Finland,64.0,26.0,Finlandiya
+country,Sweden,Sweden,62.0,15.0,İsveç
+country,Norway,Norway,61.0,9.0,Norveç
+country,Denmark,Denmark,56.0,10.0,Danimarka
+country,Iceland,Iceland,65.0,-18.5,
+country,Cyprus,Cyprus,35.0,33.2,Kıbrıs
+country,Georgia,Georgia,42.2,43.5,Gürcistan
+country,Armenia,Armenia,40.2,45.0,Ermenistan
+country,Azerbaijan,Azerbaijan,40.3,47.7,Azerbaycan
+country,Iran,Iran,32.4,53.7,Persia;İran
+country,Iraq,Iraq,33.0,44.0,Irak
+country,Syria,Syria,35.0,38.0,Suriye
+country,Lebanon,Lebanon,33.9,35.9,Lübnan
+country,Israel,Israel,31.5,34.9,İsrail;Palestine
+country,Jordan,Jordan,31.2,36.5,Ürdün
+country,Egypt,Egypt,26.8,30.8,Mısır
+country,Saudi Arabia,Saudi Arabia,24.0,45.0,Suudi Arabistan
+country,Libya,Libya,27.0,17.0,Libya
+country,Tunisia,Tunisia,34.0,9.0,Tunus
+country,Algeria,Algeria,28.0,3.0,Cezayir
+country,Morocco,Morocco,31.8,-7.0,Fas
+country,Afghanistan,Afghanistan,33.9,67.7,Afganistan
+country,Pakistan,Pakistan,30.4,69.3,
+country,India,India,21.0,78.0,Hindistan
+country,China,China,35.0,105.0,Çin
+country,Japan,Japan,36.0,138.0,Japonya
+country,South Korea,South Korea,36.5,127.9,Korea
+country,United States,United States,39.8,-98.6,USA;US;America;ABD;United States of America
+country,Canada,Canada,56.0,-106.0,Kanada
+country,Mexico,Mexico,23.6,-102.5,Meksika
+country,Brazil,Brazil,-10.0,-55.0,Brezilya
+country,Argentina,Argentina,-34.0,-64.0,Arjantin
+country,Australia,Australia,-25.0,133.0,Avustralya
+country,New Zealand,New Zealand,-41.0,174.0,
+country,South Africa,South Africa,-29.0,24.0,Güney Afrika
+country,Kazakhstan,Kazakhstan,48.0,68.0,Kazakistan
+country,Uzbekistan,Uzbekistan,41.4,64.6,Özbekistan

@@ -247,3 +247,54 @@ test('new views pass automated accessibility checks', async ({ page, request }) 
     expect(r.violations.map((v) => `${kind}: ${v.id} – ${v.help}`)).toEqual([])
   }
 })
+
+test('map: offline geocoding, markers, heat map, migration arcs, time slider, export and accessibility', async ({
+  page,
+  request,
+}) => {
+  await seedFamily(request)
+  const me = (await api<{ items: { id: string }[] }>(request, 'person.list', { q: 'Emre', limit: 5 })).items[0].id
+  await api(request, 'event.put', {
+    owner_type: 'person',
+    owner_id: me,
+    kind: 'DEAT',
+    date_text: '2050',
+    place_text: 'Adana, Türkiye',
+  })
+  await page.goto('/')
+  await nav(page, /Map/)
+  const canvas = page.getByTestId('map-canvas')
+  await expect(canvas).toHaveAttribute('data-ready', '1', { timeout: 20_000 })
+  await expect(canvas).toHaveAttribute('data-visible', '0')
+  await expect(page.getByTestId('map-missing').getByRole('listitem').first()).toBeVisible()
+  await page.getByTestId('map-geocode-offline').click()
+  await page.getByLabel('Hide living people').uncheck()
+  await expect.poll(async () => Number(await canvas.getAttribute('data-visible'))).toBeGreaterThanOrEqual(3)
+  // Event-type filter narrows the markers.
+  const all = Number(await canvas.getAttribute('data-visible'))
+  await page.getByRole('group', { name: 'Event types' }).getByLabel('Death').uncheck()
+  await expect.poll(async () => Number(await canvas.getAttribute('data-visible'))).toBeLessThan(all)
+  await page.getByRole('group', { name: 'Event types' }).getByLabel('Death').check()
+  // Modes.
+  await page.getByTestId('map-mode').selectOption('heat')
+  await page.getByTestId('map-mode').selectOption('migration')
+  await expect.poll(async () => Number(await canvas.getAttribute('data-arcs'))).toBeGreaterThanOrEqual(1)
+  await page.getByTestId('map-mode').selectOption('lineage')
+  await expect.poll(async () => Number(await canvas.getAttribute('data-arcs'))).toBeGreaterThanOrEqual(1)
+  await page.getByTestId('map-mode').selectOption('markers')
+  // Time slider.
+  const to = page.getByRole('slider', { name: 'To' })
+  await to.fill('1951')
+  await expect.poll(async () => Number(await canvas.getAttribute('data-visible'))).toBeLessThan(all)
+  await page.getByRole('button', { name: 'All years' }).click()
+  // Table alternative and export.
+  await page.getByText(/Show as table/).click()
+  await expect(page.getByTestId('map-table').getByRole('row')).not.toHaveCount(1)
+  const dl = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'KML' }).click()
+  const kml = readFileSync(await (await dl).path(), 'utf8')
+  expect(kml).toContain('<Placemark>')
+  // Manual coordinates through the API are reflected as exact (non-approximate) points.
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+})

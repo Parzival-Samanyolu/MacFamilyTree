@@ -35,7 +35,8 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Timeline, Calendar | ✅ | `core/timeline.rs`; E2E |
 | Reports | ✅ | see J |
 | Repositories, Tasks | ✅ | Library view |
-| Virtual Tree (3D), Maps, Media, Stories | ⬜ | |
+| Maps | ✅ | `geo_tests.rs`, `api_tests.rs`, E2E |
+| Virtual Tree (3D), Media, Stories | ⬜ | |
 | Sources | ✅ | standalone browser with source-type templates, reliability, repositories |
 | Notes | 🟡 | add/remove notes on a person; no standalone browser |
 | Charts | 🟡 | see E |
@@ -76,7 +77,9 @@ Life-span timeline chart ✅, month calendar ✅, family-group sheet ✅ (as a r
 
 ## F–H. Virtual tree, Maps, Timeline & Calendar
 Timeline (with editable historical overlay), life-span chart, month calendar, birthday/anniversary iCalendar export ✅.
-Virtual tree and Maps ⬜. Place engine exists (hierarchy, find-or-create, merge, duplicates — `core/places.rs`); no map UI, geocoding or KML/GeoJSON.
+Virtual tree ⬜.
+
+Maps ✅ (`core/geo.rs`, `ui/src/views/MapView.tsx`): MapLibre GL map with markers (clustered, colour by event type), heat map, migration arcs (birth→death) and lineage arcs (parent→child birth), a selected person's route, a from/to year slider with playback, event-type and surname/person filters, living-person hiding, click-to-set coordinates, PNG screenshot, GeoJSON and KML export, and an accessible table alternative. Geocoding: embedded offline gazetteer (262 cities/countries, aliases and Turkish diacritics, country disambiguation), child places inherit the nearest ancestor's coordinates, and opt-in online Nominatim (1 request/s, persistent cache). Base maps: bundled offline world outline (Natural Earth, public domain), OpenStreetMap raster (online, opt-in), or a local PMTiles file (raster or vector). Not provided: historical-border layers (no permissively licensed offline dataset), place-name labels on the offline outline.
 
 ## I. Statistics ✅
 All listed measures except "average lifespan by decade" (century only) — `core/stats.rs`, `stats_tests.rs`, E2E drill-down.
@@ -118,4 +121,4 @@ Dashboard ✅ (home person ⬜) · Tasks/to-do list ✅ · Onboarding wizard ✅
 | Core unit-test coverage ≥ 90% | ⬜ not measured (116 Rust tests; coverage tooling not set up) |
 | CI on 3 OSes | 🟡 workflow written; only the Linux run has been executed here |
 | Desktop packaging (.dmg/.msi/AppImage/.deb) | 🟡 Tauri 2 shell source + CI job written; **not built in this environment** (needs system WebView libs) |
-| Canvas/WebGL, Three.js, MapLibre, ONNX face detection, OCR | ⬜ |
+| Canvas/WebGL, Three.js, ONNX face detection, OCR | ⬜ |

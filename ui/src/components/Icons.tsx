@@ -115,6 +115,11 @@ export const Icons = {
       <circle cx="14" cy="18" r="2" />
     </Svg>
   ),
+  map: (
+    <Svg>
+      <path d="M9 4L3 6.5v13L9 17l6 3 6-2.5v-13L15 7zM9 4v13M15 7v13" />
+    </Svg>
+  ),
   calendar: (
     <Svg>
       <rect x="3" y="5" width="18" height="16" rx="2" />

@@ -231,7 +231,8 @@
     "timeline": "Zaman çizelgesi",
     "calendar": "Takvim",
     "reports": "Raporlar",
-    "library": "Kaynaklar ve görevler"
+    "library": "Kaynaklar ve görevler",
+    "map": "Harita"
   },
   "notes": {
     "add": "Not ekle",
@@ -643,5 +644,48 @@
       "doing": "Sürüyor",
       "done": "Bitti"
     }
+  },
+  "map": {
+    "mode": "Görünüm",
+    "basemap": "Altlık harita",
+    "kinds": "Olay türleri",
+    "aria": "Yaşam olaylarının haritası",
+    "places": "Yerler",
+    "modes": {
+      "markers": "İşaretler",
+      "heat": "Isı haritası",
+      "migration": "Göç (doğum → ölüm)",
+      "lineage": "Soy hattı (ebeveyn → çocuk doğumu)"
+    },
+    "base": {
+      "offline": "Çevrimdışı dünya taslağı",
+      "osm": "OpenStreetMap (çevrimiçi)",
+      "pmtiles": "Çevrimdışı döşemeler (PMTiles dosyası)"
+    },
+    "pmtilesFile": "PMTiles dosyası",
+    "osmNote": "Çevrimiçi döşemeler tile.openstreetmap.org adresinden istenir ve baktığınız alanı o sunucuya bildirir.",
+    "onlySelected": "Yalnızca seçili kişi (güzergâh)",
+    "hideLiving": "Yaşayanları gizle",
+    "screenshot": "Görüntüyü kaydet",
+    "play": "Oynat",
+    "reset": "Tüm yıllar",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "geocodeOffline": "Yerleri çevrimdışı bul",
+    "geocoded": "{{count}} yer bulundu, {{left}} yer çözülemedi.",
+    "onlineOptIn": "Nominatim ile çevrimiçi aramaya izin ver (yer adlarını nominatim.openstreetmap.org adresine gönderir; saniyede bir istek, sonuçlar önbelleğe alınır).",
+    "geocodeOnline": "{{count}} yeri çevrimiçi ara",
+    "lookingUp": "{{name}} aranıyor…",
+    "pick": "Haritada belirle",
+    "pickHint": "Koordinatları belirlemek için haritaya tıklayın.",
+    "tableToggle": "Tablo olarak göster ({{count}} olay)",
+    "approx": "yaklaşık",
+    "col": {
+      "name": "Ad",
+      "event": "Olay",
+      "year": "Yıl",
+      "place": "Yer"
+    },
+    "missing": "Koordinatsız {{count}} yer"
   }
 }

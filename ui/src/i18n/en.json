@@ -231,7 +231,8 @@
     "timeline": "Timeline",
     "calendar": "Calendar",
     "reports": "Reports",
-    "library": "Sources & tasks"
+    "library": "Sources & tasks",
+    "map": "Map"
   },
   "notes": {
     "add": "Add a note",
@@ -643,5 +644,48 @@
       "doing": "In progress",
       "done": "Done"
     }
+  },
+  "map": {
+    "mode": "Display",
+    "basemap": "Base map",
+    "kinds": "Event types",
+    "aria": "Map of life events",
+    "places": "Places",
+    "modes": {
+      "markers": "Markers",
+      "heat": "Heat map",
+      "migration": "Migration (birth → death)",
+      "lineage": "Lineage (parent → child birth)"
+    },
+    "base": {
+      "offline": "Offline world outline",
+      "osm": "OpenStreetMap (online)",
+      "pmtiles": "Offline tiles (PMTiles file)"
+    },
+    "pmtilesFile": "PMTiles file",
+    "osmNote": "Online tiles are requested from tile.openstreetmap.org and reveal the viewed area to that server.",
+    "onlySelected": "Selected person only (route)",
+    "hideLiving": "Hide living people",
+    "screenshot": "Save image",
+    "play": "Play",
+    "reset": "All years",
+    "from": "From",
+    "to": "To",
+    "geocodeOffline": "Locate places offline",
+    "geocoded": "{{count}} places located, {{left}} still unresolved.",
+    "onlineOptIn": "Allow online lookup with Nominatim (sends place names to nominatim.openstreetmap.org; one request per second, results are cached).",
+    "geocodeOnline": "Look up {{count}} places online",
+    "lookingUp": "Looking up {{name}}…",
+    "pick": "Set on map",
+    "pickHint": "Click the map to set the coordinates.",
+    "tableToggle": "Show as table ({{count}} events)",
+    "approx": "approximate",
+    "col": {
+      "name": "Name",
+      "event": "Event",
+      "year": "Year",
+      "place": "Place"
+    },
+    "missing": "{{count}} places without coordinates"
   }
 }

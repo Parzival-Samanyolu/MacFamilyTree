@@ -7,6 +7,7 @@ export type View =
   | 'tree'
   | 'fan'
   | 'timeline'
+  | 'map'
   | 'calendar'
   | 'relationship'
   | 'reports'

@@ -2,6 +2,7 @@ pub mod date;
 pub mod duplicates;
 pub mod facts;
 pub mod gedcom;
+pub mod geo;
 pub mod kinship_terms;
 pub mod layout;
 pub mod model;

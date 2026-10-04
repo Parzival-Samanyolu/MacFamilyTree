@@ -120,6 +120,11 @@ export const Icons = {
       <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5" />
     </Svg>
   ),
+  edit: (
+    <Svg>
+      <path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" />
+    </Svg>
+  ),
   image: (
     <Svg>
       <rect x="3" y="4" width="18" height="16" rx="2" />

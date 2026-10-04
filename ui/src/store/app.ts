@@ -16,6 +16,7 @@ export type View =
   | 'reports'
   | 'library'
   | 'quality'
+  | 'replace'
   | 'statistics'
   | 'importexport'
   | 'settings'

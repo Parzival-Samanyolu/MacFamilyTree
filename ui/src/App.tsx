@@ -2,10 +2,10 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { call } from './api/client'
-import { CommandPalette, HelpDialog, Sidebar, StatusBar, Toasts, Toolbar } from './components/Shell'
+import { CommandPalette, HelpDialog, NAV, Sidebar, StatusBar, Toasts, Toolbar } from './components/Shell'
 import { Wizard } from './components/Wizard'
 import { act, queryClient, refreshStatus } from './lib/query'
-import { useApp, type View } from './store/app'
+import { useApp } from './store/app'
 import { Dashboard } from './views/Dashboard'
 import { FanChart } from './views/FanChart'
 import { ImportExport } from './views/ImportExport'
@@ -18,27 +18,12 @@ import { TreeView } from './views/TreeView'
 import { CalendarView } from './views/Calendar'
 import { Library } from './views/Library'
 import { Reports } from './views/Reports'
+import { FindReplace } from './views/FindReplace'
 import { Stories } from './views/Stories'
 import { Timeline } from './views/Timeline'
 const MapView = lazy(() => import('./views/MapView').then((m) => ({ default: m.MapView })))
 import { MediaView } from './views/MediaView'
 const VirtualTree = lazy(() => import('./views/VirtualTree').then((m) => ({ default: m.VirtualTree })))
-
-const VIEW_KEYS: View[] = [
-  'dashboard',
-  'persons',
-  'tree',
-  'fan',
-  'timeline',
-  'map',
-  'media',
-  'virtual',
-  'stories',
-  'calendar',
-  'relationship',
-  'reports',
-  'library',
-]
 
 function Router() {
   return (
@@ -83,6 +68,8 @@ function RouterInner() {
       return <Reports />
     case 'library':
       return <Library />
+    case 'replace':
+      return <FindReplace />
     case 'quality':
       return <Quality />
     case 'statistics':
@@ -124,7 +111,7 @@ function useGlobalShortcuts() {
         }
       } else if (mod && /^[1-9]$/.test(e.key)) {
         e.preventDefault()
-        const v = VIEW_KEYS[Number(e.key) - 1]
+        const v = NAV[Number(e.key) - 1]?.view
         if (v && (st.status.open || v === 'dashboard' || v === 'settings' || v === 'importexport')) st.go(v)
       } else if (e.altKey && e.key === 'ArrowLeft') {
         e.preventDefault()

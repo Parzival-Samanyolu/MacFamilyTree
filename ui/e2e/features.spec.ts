@@ -504,3 +504,54 @@ test('archives: website zip, GEDZIP, and an encrypted backup that round-trips', 
   const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
   expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
 })
+
+test('person tabs: associations and change history', async ({ page, request }) => {
+  await seedFamily(request)
+  await openPerson(page, 'Emre')
+  await page.getByRole('tab', { name: 'Associations' }).click()
+  const box = page.getByTestId('associations')
+  await expect(box.getByText('No associations.')).toBeVisible()
+  await box.getByLabel('Associated person').fill('Ali')
+  await box.getByRole('option', { name: /Ali/ }).first().click()
+  await box.getByLabel('Role').fill('Godparent')
+  await box.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(box.getByText('Godparent')).toBeVisible()
+  await page.getByRole('tab', { name: 'History' }).click()
+  const hist = page.getByTestId('person-history')
+  await expect(hist.getByRole('listitem').first()).toBeVisible()
+  expect(await hist.getByRole('listitem').count()).toBeGreaterThanOrEqual(2)
+  await page.getByRole('tab', { name: 'Associations' }).click()
+  await box.getByRole('button', { name: 'Delete' }).click()
+  await expect(box.getByText('No associations.')).toBeVisible()
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+})
+
+test('find & replace: preview, apply across records, undo; digit shortcuts follow the sidebar order', async ({
+  page,
+  request,
+}) => {
+  await seedFamily(request)
+  await page.goto('/')
+  await nav(page, /Find & replace/)
+  await page.getByLabel('Find', { exact: true }).fill('kaya')
+  await page.getByLabel('Replace with').fill('Kaplan')
+  await page.getByRole('button', { name: 'Preview' }).click()
+  const pv = page.getByTestId('replace-preview')
+  await expect(pv.getByText('2 matches')).toBeVisible()
+  await expect(pv.getByRole('row', { name: /Kaya.*Kaplan/ })).toHaveCount(2)
+  page.once('dialog', (d) => void d.accept())
+  await page.getByRole('button', { name: 'Replace 2' }).click()
+  await expect(page.getByText('Replaced in 2 records.')).toBeVisible()
+  await expect.poll(async () => (await api<unknown[]>(request, 'search', { q: 'Kaplan' })).length).toBe(2)
+  await page.getByRole('button', { name: 'Undo' }).first().click()
+  await expect.poll(async () => (await api<unknown[]>(request, 'search', { q: 'Kaplan' })).length).toBe(0)
+  const r = await new AxeBuilder({ page }).disableRules(['scrollable-region-focusable']).analyze()
+  expect(r.violations.map((v) => `${v.id} – ${v.help} – ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+  // Ctrl+3 opens the third sidebar item (the family tree)
+  await page.keyboard.press('Control+3')
+  await expect(page.getByRole('navigation').getByRole('button', { name: /Family tree/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+})

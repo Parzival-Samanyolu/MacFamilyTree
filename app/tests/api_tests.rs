@@ -1436,3 +1436,136 @@ fn encrypted_backup_website_and_gedzip_via_api() {
         0
     );
 }
+
+#[test]
+fn person_history_lists_only_changes_touching_that_person() {
+    let mut s = fresh();
+    let a = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Ali", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .clone();
+    let b = call(
+        &mut s,
+        "person.create",
+        json!({"given": "Veli", "surname": "Kaya", "sex": "M"}),
+    )["id"]
+        .clone();
+    call(
+        &mut s,
+        "event.put",
+        json!({"owner_type": "person", "owner_id": a, "kind": "BIRT", "date_text": "1850"}),
+    );
+    call(
+        &mut s,
+        "person.update",
+        json!({"id": b, "bookmarked": true}),
+    );
+    let ha = call(&mut s, "person.history", json!({"id": a}));
+    let hb = call(&mut s, "person.history", json!({"id": b}));
+    assert!(ha.as_array().unwrap().len() >= 2, "{ha}");
+    assert!(
+        ha.as_array()
+            .unwrap()
+            .iter()
+            .any(|h| h["label"].as_str().unwrap().contains("event")
+                || h["label"]
+                    .as_str()
+                    .unwrap()
+                    .to_lowercase()
+                    .contains("event")),
+        "{ha}"
+    );
+    assert!(
+        hb.as_array().unwrap().iter().all(|h| !h["label"]
+            .as_str()
+            .unwrap()
+            .to_lowercase()
+            .contains("event")),
+        "{hb}"
+    );
+    call(&mut s, "history.undo", json!({}));
+    assert!(call(&mut s, "person.history", json!({"id": b}))[0]["undone"] == true);
+    // associations through the generic record API
+    let r = call(
+        &mut s,
+        "rec.put",
+        json!({"table": "association", "row": {"person_id": a, "other_id": b, "role": "Godfather"}}),
+    );
+    let d = call(&mut s, "person.get", json!({"id": a}));
+    assert_eq!(d["associations"][0]["role"], "Godfather");
+    call(
+        &mut s,
+        "rec.delete",
+        json!({"table": "association", "id": r["id"]}),
+    );
+    assert_eq!(
+        call(&mut s, "person.get", json!({"id": a}))["associations"]
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+}
+
+#[test]
+fn bulk_find_and_replace_previews_applies_and_validates() {
+    let mut s = fresh();
+    for (g, sn) in [("Ali", "Kaya"), ("Veli", "kaya"), ("Can", "Demir")] {
+        call(
+            &mut s,
+            "person.create",
+            json!({"given": g, "surname": sn, "sex": "M"}),
+        );
+    }
+    assert!(call(&mut s, "bulk.fields", json!({}))
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|f| f == "person_name.surname"));
+    let pv = call(
+        &mut s,
+        "bulk.preview",
+        json!({"field": "person_name.surname", "find": "KAYA", "replace": "Kaplan", "limit": 1}),
+    );
+    assert_eq!(pv["total"], 2);
+    assert_eq!(pv["changes"].as_array().unwrap().len(), 1);
+    let strict = call(
+        &mut s,
+        "bulk.preview",
+        json!({"field": "person_name.surname", "find": "Kaya", "replace": "X", "case_sensitive": true}),
+    );
+    assert_eq!(strict["total"], 1);
+    assert_eq!(
+        call(
+            &mut s,
+            "bulk.apply",
+            json!({"field": "person_name.surname", "find": "kaya", "replace": "Kaplan"})
+        )["changed"],
+        2
+    );
+    assert_eq!(
+        call(&mut s, "search", json!({"q": "Kaplan"}))
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    call(&mut s, "history.undo", json!({}));
+    assert_eq!(
+        call(&mut s, "search", json!({"q": "Kaplan"}))
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+    assert_eq!(
+        err(
+            &mut s,
+            "bulk.preview",
+            json!({"field": "person.sex", "find": "M"})
+        ),
+        "store"
+    );
+}

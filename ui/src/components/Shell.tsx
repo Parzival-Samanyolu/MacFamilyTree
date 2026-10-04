@@ -8,7 +8,7 @@ import { Icons } from './Icons'
 import { Modal } from './Modal'
 import { PersonChip } from './PersonChip'
 
-const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
+export const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
   { view: 'dashboard', icon: 'home', key: 'nav.dashboard' },
   { view: 'persons', icon: 'people', key: 'nav.persons' },
   { view: 'tree', icon: 'tree', key: 'nav.tree' },
@@ -23,6 +23,7 @@ const NAV: { view: View; icon: keyof typeof Icons; key: string }[] = [
   { view: 'reports', icon: 'file', key: 'nav.reports' },
   { view: 'library', icon: 'book', key: 'nav.library' },
   { view: 'quality', icon: 'check', key: 'nav.quality' },
+  { view: 'replace', icon: 'edit', key: 'nav.replace' },
   { view: 'statistics', icon: 'chart', key: 'nav.statistics' },
   { view: 'importexport', icon: 'file', key: 'nav.importexport' },
   { view: 'settings', icon: 'gear', key: 'nav.settings' },
@@ -46,7 +47,7 @@ export function Sidebar() {
       >
         {Icons.menu}
       </button>
-      <ul className="flex flex-col gap-1">
+      <ul className="flex min-h-0 flex-col gap-1 overflow-y-auto">
         {NAV.map((n, i) => {
           const disabled = !status.open && n.view !== 'dashboard' && n.view !== 'settings' && n.view !== 'importexport'
           return (
@@ -54,7 +55,9 @@ export function Sidebar() {
               <button
                 type="button"
                 disabled={disabled}
-                title={`${t(n.key)}  (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+'}${i + 1})`}
+                title={
+                  i < 9 ? `${t(n.key)}  (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+'}${i + 1})` : t(n.key)
+                }
                 aria-current={view === n.view ? 'page' : undefined}
                 onClick={() => go(n.view)}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm disabled:opacity-40 ${view === n.view ? 'bg-[var(--accent-soft)] font-medium text-[var(--accent)]' : 'hover:bg-[var(--surface-2)]'}`}

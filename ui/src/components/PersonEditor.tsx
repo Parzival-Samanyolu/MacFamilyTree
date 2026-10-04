@@ -13,6 +13,7 @@ import { Modal } from './Modal'
 import { Avatar, PersonChip } from './PersonChip'
 import { PersonPicker } from './PersonPicker'
 import { MediaThumb } from './MediaThumb'
+import { Associations, PersonHistory } from './PersonExtras'
 import { uploadFiles, type MediaItem } from '../lib/media'
 
 const REL_KINDS = ['father', 'mother', 'partner', 'child', 'sibling'] as const
@@ -89,7 +90,7 @@ export function PersonEditor({ id }: { id: string }) {
 
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List className="mb-4 flex gap-1 border-b border-[var(--border)]" aria-label={t('person.sections')}>
-          {['overview', 'names', 'events', 'relationships', 'media', 'notes'].map((k) => (
+          {['overview', 'names', 'events', 'relationships', 'associations', 'media', 'notes', 'history'].map((k) => (
             <Tabs.Trigger
               key={k}
               value={k}
@@ -111,6 +112,12 @@ export function PersonEditor({ id }: { id: string }) {
         </Tabs.Content>
         <Tabs.Content value="relationships">
           <Relationships d={data} open={open} onAdd={(kind, family_id) => setAddKind({ kind, family_id })} />
+        </Tabs.Content>
+        <Tabs.Content value="associations">
+          <Associations d={data} open={open} />
+        </Tabs.Content>
+        <Tabs.Content value="history">
+          <PersonHistory id={id} />
         </Tabs.Content>
         <Tabs.Content value="media">
           <PersonMedia id={id} primary={data.person.primary_media ?? null} />

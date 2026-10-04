@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
+use kintree_core::bulk;
 use kintree_core::crypto;
 use kintree_core::date::{GenDate, Locale};
 use kintree_core::duplicates;
@@ -131,6 +132,16 @@ fn current_year() -> i32 {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     (1970.0 + secs as f64 / 31_556_952.0) as i32
+}
+
+fn bulk_spec(args: &Value) -> Result<bulk::Spec, ApiError> {
+    Ok(bulk::Spec {
+        field: req(args, "field")?,
+        find: req(args, "find")?,
+        replace: s(args, "replace").unwrap_or_default(),
+        case_sensitive: b(args, "case_sensitive", false),
+        whole_field: b(args, "whole_field", false),
+    })
 }
 
 fn geo_filter(args: &Value) -> geo::Filter {
@@ -1415,6 +1426,28 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
             })?;
             Ok(json!({"id": id}))
         }
+        "person.history" => {
+            let id = req(&args, "id")?;
+            let st = sess.store()?;
+            let mut q = st
+                .conn()
+                .prepare(
+                    "SELECT DISTINCT h.id, h.label, h.ts, h.undone FROM history h JOIN history_ops o ON o.history_id = h.id \
+                     WHERE (o.tbl = 'person' AND o.row_id = ?1) \
+                        OR (o.tbl IN ('person_name', 'family_child') AND (json_extract(o.after_json, '$.person_id') = ?1 OR json_extract(o.before_json, '$.person_id') = ?1)) \
+                        OR (o.tbl = 'event' AND (json_extract(o.after_json, '$.owner_id') = ?1 OR json_extract(o.before_json, '$.owner_id') = ?1)) \
+                     ORDER BY h.id DESC LIMIT 200",
+                )
+                .map_err(StoreError::from)?;
+            let v: Vec<Value> = q
+                .query_map([&id], |r| {
+                    Ok(json!({"id": r.get::<_, i64>(0)?, "label": r.get::<_, String>(1)?, "ts": r.get::<_, i64>(2)?, "undone": r.get::<_, i64>(3)? != 0}))
+                })
+                .map_err(StoreError::from)?
+                .collect::<Result<_, _>>()
+                .map_err(StoreError::from)?;
+            Ok(json!(v))
+        }
         "person.delete" => {
             let id = req(&args, "id")?;
             sess.store_mut()?
@@ -1960,6 +1993,25 @@ pub fn dispatch(sess: &mut Session, cmd: &str, args: Value) -> Res {
             Ok(
                 json!({"title": doc.title, "html": report::to_html(&doc), "markdown": report::to_markdown(&doc)}),
             )
+        }
+        "bulk.fields" => Ok(json!(bulk::FIELDS
+            .iter()
+            .map(|(t, c)| format!("{t}.{c}"))
+            .collect::<Vec<_>>())),
+        "bulk.preview" => {
+            let spec = bulk_spec(&args)?;
+            let all = bulk::preview(sess.store()?, &spec)?;
+            let limit = u(&args, "limit", 50) as usize;
+            Ok(
+                json!({"total": all.len(), "changes": all.into_iter().take(limit).collect::<Vec<_>>()}),
+            )
+        }
+        "bulk.apply" => {
+            let spec = bulk_spec(&args)?;
+            let n = sess
+                .store_mut()?
+                .transact("Find and replace", |tx| bulk::apply(tx, &spec))?;
+            Ok(json!({"changed": n}))
         }
         "place.set_coords" => {
             let id = req(&args, "id")?;

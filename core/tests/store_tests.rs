@@ -176,3 +176,49 @@ fn search_is_turkish_and_diacritic_insensitive() {
         );
     }
 }
+
+#[test]
+fn undo_and_redo_keep_the_search_index_in_sync_for_name_and_event_edits() {
+    use kintree_core::name::PersonName;
+    let mut s = Store::open_memory().unwrap();
+    let id = s
+        .transact("add", |tx| {
+            tx.create_person(&PersonName::new("Ali", "Kaya"), "M")
+        })
+        .unwrap();
+    let name_id = s.rows("person_name").unwrap()[0]["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    s.transact("rename", |tx| {
+        let mut r = tx.get("person_name", &name_id)?.unwrap();
+        r.insert("surname".into(), "Demir".into());
+        tx.put_row("person_name", r)?;
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(s.search_persons("demir", 5).unwrap(), vec![id.clone()]);
+    s.undo().unwrap();
+    assert!(
+        s.search_persons("demir", 5).unwrap().is_empty(),
+        "stale index after undo"
+    );
+    assert_eq!(s.search_persons("kaya", 5).unwrap(), vec![id.clone()]);
+    s.redo().unwrap();
+    assert_eq!(s.search_persons("demir", 5).unwrap(), vec![id.clone()]);
+    assert!(s.search_persons("kaya", 5).unwrap().is_empty());
+    // event edits (place text is indexed)
+    let place = s
+        .transact("place", |tx| {
+            kintree_core::places::find_or_create(tx, "Konya")
+        })
+        .unwrap()
+        .unwrap();
+    s.transact("birth", |tx| {
+        tx.add_event("person", &id, "BIRT", None, Some(&place))
+    })
+    .unwrap();
+    assert_eq!(s.search_persons("konya", 5).unwrap(), vec![id.clone()]);
+    s.undo().unwrap();
+    assert!(s.search_persons("konya", 5).unwrap().is_empty());
+}

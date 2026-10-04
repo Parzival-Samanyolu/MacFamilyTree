@@ -51,11 +51,11 @@ Maps every section of the original requirements to its status. ✅ done and test
 | Item | Status | Notes |
 |---|---|---|
 | Tabs: Overview, Names, Events & facts, Relationships, Notes & sources | ✅ | |
-| Tabs: Associations, Tasks, Custom fields, History | ⬜ | associations exist in the data model and GEDCOM `ASSO` |
+| Tabs: Associations ✅, History ✅, Tasks (Sources & tasks view), Custom fields | 🟡 | custom facts are custom-typed events; free-form per-person key/value fields ⬜ |
 | Add father / mother / partner / child / sibling with surname rules (patrilineal, patronymic, Spanish double, Turkish, Slavic) | ✅ | `name.rs`; `naming_cultures_for_children`, `blank_surname_means_inherit_not_empty` |
 | Drag-and-drop reorder of events and children | ✅ | partners/media: ⬜ |
 | Autocomplete for places | ✅ | names / occupations / sources: ⬜ |
-| Bulk edit, find/replace | ⬜ | |
+| Bulk edit, find/replace | ✅ | `bulk_tests.rs`, E2E (11 text fields, preview, one-step undo) |
 | Age at event | ✅ | `event_json` |
 | Ahnentafel, d'Aboville, Henry numbering | 🟡 | core + `chart.numbering` API; no UI. Register: ⬜ |
 | Living detection and privacy | ✅ | `model::living_ids`; masked/excluded in GEDCOM export. Reports: ⬜ |
@@ -123,7 +123,7 @@ Dashboard ✅ (home person ⬜) · Tasks/to-do list ✅ · Onboarding wizard ✅
 | GEDCOM import speed | 🟡 100k persons in ≈43 s (linear; optimisation planned) |
 | Accessibility: keyboard, labels, high contrast, scalable text, dark/light | ✅ axe-core scans of every main view (light theme) pass in CI |
 | i18n EN + TR, all strings externalised | ✅ key-coverage test |
-| Core unit-test coverage ≥ 90% | ⬜ not measured (116 Rust tests; coverage tooling not set up) |
+| Core unit-test coverage ≥ 90% | ✅ 93.2% line / 92.1% region (cargo-llvm-cov, whole workspace suite; CI gate `--fail-under-lines 90`). Measure locally: `cargo llvm-cov --workspace --ignore-filename-regex 'tests/\|app/' --summary-only` |
 | CI on 3 OSes | 🟡 workflow written; only the Linux run has been executed here |
 | Desktop packaging (.dmg/.msi/AppImage/.deb) | 🟡 Tauri 2 shell source + CI job written; **not built in this environment** (needs system WebView libs) |
 | Canvas/WebGL tree renderer for very large 2D trees, ONNX face detection, OCR | ⬜ |

@@ -543,6 +543,13 @@ impl Store {
                 drop(st);
                 for (tbl, id, b, a) in ops {
                     let t = table_name(&tbl)?;
+                    // keep both images so the search index can find the owning person of name/event rows
+                    let (before_row, after_row) = (
+                        b.as_deref()
+                            .and_then(|j| serde_json::from_str::<Row>(j).ok()),
+                        a.as_deref()
+                            .and_then(|j| serde_json::from_str::<Row>(j).ok()),
+                    );
                     let target = if forward { a } else { b };
                     match target {
                         Some(json) => {
@@ -556,8 +563,8 @@ impl Store {
                     touched.push(Op {
                         table: t,
                         id,
-                        before: None,
-                        after: None,
+                        before: before_row,
+                        after: after_row,
                     });
                 }
                 self.conn.execute(

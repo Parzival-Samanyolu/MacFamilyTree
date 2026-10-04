@@ -235,7 +235,8 @@
     "map": "Map",
     "media": "Media",
     "virtual": "Virtual tree",
-    "stories": "Stories"
+    "stories": "Stories",
+    "replace": "Find & replace"
   },
   "notes": {
     "add": "Add a note",
@@ -427,7 +428,9 @@
     "events": "Events & facts",
     "relationships": "Relationships",
     "notes": "Notes & sources",
-    "media": "Media"
+    "media": "Media",
+    "associations": "Associations",
+    "history": "History"
   },
   "toast": {
     "added": "Added {{name}}",
@@ -796,5 +799,48 @@
     "openButton": "Open encrypted backup…",
     "opened": "Encrypted backup opened.",
     "warning": "There is no password recovery. If you lose the password, the backup cannot be opened."
+  },
+  "assoc": {
+    "title": "Associations",
+    "hint": "People connected to this person who are not relatives: godparents, witnesses, guardians, friends.",
+    "none": "No associations.",
+    "person": "Associated person",
+    "role": "Role",
+    "notes": "Notes"
+  },
+  "history": {
+    "title": "Change history",
+    "hint": "Every change to this person, their names and events. Use Undo (Ctrl+Z) to revert the latest changes.",
+    "none": "No recorded changes.",
+    "undone": "undone"
+  },
+  "replace": {
+    "hint": "Change text across many records at once. Preview first; the whole change can be undone in one step.",
+    "field": "Field",
+    "find": "Find",
+    "with": "Replace with",
+    "caseSensitive": "Match case",
+    "whole": "Whole field only",
+    "preview": "Preview",
+    "apply": "Replace {{count}}",
+    "matches": "{{count}} matches",
+    "before": "Before",
+    "after": "After",
+    "truncated": "Showing the first {{shown}}.",
+    "confirm": "Replace in {{count}} records?",
+    "done": "Replaced in {{count}} records.",
+    "fields": {
+      "person_name_given": "Given name",
+      "person_name_surname": "Surname",
+      "person_name_nickname": "Nickname",
+      "place_name": "Place name",
+      "event_description": "Event description",
+      "event_value": "Event value",
+      "event_cause": "Event cause",
+      "note_body": "Note text",
+      "source_title": "Source title",
+      "source_author": "Source author",
+      "citation_page": "Citation page"
+    }
   }
 }

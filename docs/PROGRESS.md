@@ -67,8 +67,15 @@ Three.js scene with LOD labels, 3 themes, accessible list; lazy-loaded chunk (Ma
 ## Archives (done)
 `pkg.rs` (ZIP, GEDZIP), `site.rs` (static website), `crypto.rs` (Argon2id + ChaCha20-Poly1305 encrypted project backups; `Store::to_bytes/from_bytes`). 8 core tests, 1 API test, 1 E2E.
 
+## Quality pass (done)
+* Core coverage 93.2% lines (target ≥ 90%); CI gate added.
+* Bug found by new tests and fixed: undo/redo left the full-text index stale for name and event edits.
+* Kinship terms: correct plural agreement (RU/DE/ES/FR), gendered Arabic fallbacks; 7-language matrix test.
+* Sidebar digit shortcuts now follow the visible sidebar order; sidebar scrolls.
+* Two timing flakes in E2E were test races (read counts / pressed Enter before results rendered) and are fixed.
+
 ## Known issues
-* One E2E test ("tree: changing generations and direction") failed once in a full run and passed in 14 later runs (10 of them under heavy CPU load); cause not identified. CI allows a single retry.
+* E2E tests have shown occasional timing races under heavy load (fixed case by case by waiting for rendered results). CI allows one retry.
 
 ## Blocked / unverifiable here
 * Tauri desktop build (no WebKitGTK in this container). Source + CI job are in place.

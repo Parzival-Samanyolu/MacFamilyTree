@@ -456,7 +456,15 @@ fn de(bl: &Blood, b: Sex) -> String {
                 format!("{} {}. Grades", word, degree)
             };
             if removed > 0 {
-                s.push_str(&format!(", {} Generation(en) versetzt", removed));
+                s.push_str(&format!(
+                    ", {} {} versetzt",
+                    removed,
+                    if removed == 1 {
+                        "Generation"
+                    } else {
+                        "Generationen"
+                    }
+                ));
             }
             s
         }
@@ -512,7 +520,15 @@ fn es(bl: &Blood, b: Sex) -> String {
                 n => format!("{} de {}º grado", base, n),
             };
             if removed > 0 {
-                s.push_str(&format!(" ({} generación/es de diferencia)", removed));
+                s.push_str(&format!(
+                    " ({} {} de diferencia)",
+                    removed,
+                    if removed == 1 {
+                        "generación"
+                    } else {
+                        "generaciones"
+                    }
+                ));
             }
             s
         }
@@ -571,8 +587,13 @@ fn fr(bl: &Blood, b: Sex) -> String {
             };
             if removed > 0 {
                 s.push_str(&format!(
-                    " (issu de germain, {} génération(s) d'écart)",
-                    removed
+                    " (issu de germain, {} {} d'écart)",
+                    removed,
+                    if removed == 1 {
+                        "génération"
+                    } else {
+                        "générations"
+                    }
                 ));
             }
             s
@@ -643,11 +664,26 @@ fn ru(bl: &Blood, b: Sex) -> String {
                 _ => format!("{} брат", prefix),
             };
             if u != d {
-                format!("{} (разница в {} поколений)", word, u.abs_diff(d))
+                format!(
+                    "{} (разница в {} {})",
+                    word,
+                    u.abs_diff(d),
+                    ru_generations(u.abs_diff(d))
+                )
             } else {
                 word
             }
         }
+    }
+}
+
+/// Russian noun agreement for «поколение» after a number.
+fn ru_generations(n: usize) -> &'static str {
+    match (n % 10, n % 100) {
+        (_, 11..=14) => "поколений",
+        (1, _) => "поколение",
+        (2..=4, _) => "поколения",
+        _ => "поколений",
     }
 }
 
@@ -659,10 +695,10 @@ fn ar(bl: &Blood, b: Sex) -> String {
     match (u, d) {
         (0, 1) => pick(b, "ابن", "ابنة", "ابن/ابنة"),
         (0, 2) => pick(b, "حفيد", "حفيدة", "حفيد"),
-        (0, n) => format!("حفيد (الجيل {})", n),
+        (0, n) => format!("{} (الجيل {})", pick(b, "حفيد", "حفيدة", "حفيد"), n),
         (1, 0) => pick(b, "أب", "أم", "والد"),
         (2, 0) => pick(b, "جد", "جدة", "جد"),
-        (n, 0) => format!("جد (الجيل {})", n),
+        (n, 0) => format!("{} (الجيل {})", pick(b, "جد", "جدة", "جد"), n),
         (1, 1) => {
             if bl.half() {
                 let w = pick(b, "أخ", "أخت", "أخ/أخت");
@@ -702,11 +738,14 @@ fn ar(bl: &Blood, b: Sex) -> String {
             };
             format!("{} {}", pick(b, "ابن", "ابنة", "ابن"), relative)
         }
-        (u, d) => format!(
-            "قريب من الدرجة {} ({} جيل فرق)",
-            u.min(d) - 1,
-            u.abs_diff(d)
-        ),
+        (u, d) => {
+            let word = pick(b, "قريب", "قريبة", "قريب");
+            let degree = u.min(d) - 1;
+            match u.abs_diff(d) {
+                0 => format!("{} من الدرجة {}", word, degree),
+                r => format!("{} من الدرجة {} ({} جيل فرق)", word, degree, r),
+            }
+        }
     }
 }
 

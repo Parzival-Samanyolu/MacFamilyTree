@@ -235,7 +235,8 @@
     "map": "Harita",
     "media": "Ortam",
     "virtual": "Sanal ağaç",
-    "stories": "Hikâyeler"
+    "stories": "Hikâyeler",
+    "replace": "Bul ve değiştir"
   },
   "notes": {
     "add": "Not ekle",
@@ -427,7 +428,9 @@
     "events": "Olaylar ve olgular",
     "relationships": "İlişkiler",
     "notes": "Notlar ve kaynaklar",
-    "media": "Ortam"
+    "media": "Ortam",
+    "associations": "İlişkiler",
+    "history": "Geçmiş"
   },
   "toast": {
     "added": "{{name}} eklendi",
@@ -796,5 +799,48 @@
     "openButton": "Şifreli yedeği aç…",
     "opened": "Şifreli yedek açıldı.",
     "warning": "Parola kurtarma yoktur. Parolayı kaybederseniz yedek açılamaz."
+  },
+  "assoc": {
+    "title": "İlişkiler",
+    "hint": "Akraba olmayan bağlantılı kişiler: vaftiz ebeveyni, tanık, vasi, arkadaş.",
+    "none": "İlişki yok.",
+    "person": "İlişkili kişi",
+    "role": "Rol",
+    "notes": "Notlar"
+  },
+  "history": {
+    "title": "Değişiklik geçmişi",
+    "hint": "Bu kişide, adlarında ve olaylarında yapılan her değişiklik. Son değişiklikleri geri almak için Geri al (Ctrl+Z) kullanın.",
+    "none": "Kayıtlı değişiklik yok.",
+    "undone": "geri alındı"
+  },
+  "replace": {
+    "hint": "Birçok kayıttaki metni tek seferde değiştirin. Önce önizleyin; tüm değişiklik tek adımda geri alınabilir.",
+    "field": "Alan",
+    "find": "Bul",
+    "with": "Şununla değiştir",
+    "caseSensitive": "Büyük/küçük harf duyarlı",
+    "whole": "Yalnızca alanın tamamı",
+    "preview": "Önizle",
+    "apply": "{{count}} kaydı değiştir",
+    "matches": "{{count}} eşleşme",
+    "before": "Önce",
+    "after": "Sonra",
+    "truncated": "İlk {{shown}} gösteriliyor.",
+    "confirm": "{{count}} kayıtta değiştirilsin mi?",
+    "done": "{{count}} kayıtta değiştirildi.",
+    "fields": {
+      "person_name_given": "Ad",
+      "person_name_surname": "Soyadı",
+      "person_name_nickname": "Takma ad",
+      "place_name": "Yer adı",
+      "event_description": "Olay açıklaması",
+      "event_value": "Olay değeri",
+      "event_cause": "Olay nedeni",
+      "note_body": "Not metni",
+      "source_title": "Kaynak başlığı",
+      "source_author": "Kaynak yazarı",
+      "citation_page": "Atıf sayfası"
+    }
   }
 }

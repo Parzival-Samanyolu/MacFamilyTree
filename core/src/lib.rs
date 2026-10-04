@@ -1,3 +1,4 @@
+pub mod bulk;
 pub mod crypto;
 pub mod date;
 pub mod duplicates;
